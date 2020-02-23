@@ -1,4 +1,4 @@
-;       T T T T T T T T T T T T T T T 
+;       T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T
 ;
 ;	Unit tests for rpn68k
 ;
@@ -16,293 +16,308 @@
 ;	a5:	 pointer to failed test, disassemble here to investigate
 ;
 
-  include rpn68k.i
-  include list.i
-  include unit_test.i
+	include rpn68k.i
+	include list.i
+	include unit_test.i
 
-UT_ARITH_TESTS equ 1	; Enable tests for arithmetic commands
-UT_IF_TESTS    equ 1	; Enable tests for if commands
-UT_ALLOC_TESTS equ 1	; Enable tests for memory allocation
-UT_LIST_TESTS  equ 1	; Enable tests for list insertion
-
-
-
-  RPN68K_INIT		; init rpn68k
-
-  moveq #0,d7								; Reset unit test index
-
-  lea membuffer,a6					; Membuffer pointer to a6
-  lea SIZEOF_UT(a6),a1			; Add unit test context size
-  move.l a1,UT_mempool(a6)	; Store to UT_mempool
+ENABLE_TEST_ARITHMETIC	equ 1	; Enable tests for arithmetic commands
+ENABLE_TEST_IF					equ 1	; Enable tests for if commands
+ENABLE_TEST_ALLOC				equ 1	; Enable tests for memory allocation
+ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 
 ;
+;	Unit test start
+;
+
+	RPN68K_INIT		; init rpn68k
+
+	moveq #0,d7								; Reset unit test index
+
+	lea membuffer,a6					; Membuffer pointer to a6
+	lea SIZEOF_UT(a6),a1			; Add unit test context size
+	move.l a1,UT_mempool(a6)	; Store to UT_mempool
+
 ;	Add test values to unit test context
-;
 
-  move.w #10,UT_p10(a6)
-  move.w #20,UT_p20(a6)
-  move.w #30,UT_p30(a6)
-  move.w #-10,UT_m10(a6)
-  move.w #-20,UT_m20(a6)
-  move.w #-30,UT_m30(a6)
-
-  move.l #10,UT_p10l(a6)
-  move.l #20,UT_p20l(a6)
-  move.l #30,UT_p30l(a6)
-  move.l #-10,UT_m10l(a6)
-  move.l #-20,UT_m20l(a6)
-  move.l #-30,UT_m30l(a6)
-
-  move.w #$f0f0,UT_0xf0f0(a6)
-  move.w #$ff00,UT_0xff00(a6)
-
-
-  IF UT_ARITH_TESTS=1
-
-  TEST_NAME 'add_'
-
-  LS_ARITH_TEST #10,#20,add_,#30
-  LS_ARITH_TEST #-10,#20,add_,#10
-  LS_ARITH_TEST #-10,#-20,add_,#-30
-
-  LS_ARITH_TEST_BASE.w UT_p10(a6),UT_p20(a6),add_,#30
-  LS_ARITH_TEST_BASE.w UT_m10(a6),UT_p20(a6),add_,#10
-  LS_ARITH_TEST_BASE.w UT_m10(a6),UT_m20(a6),add_,#-30
-
-  LS_ARITH_TEST_BASE.l UT_p10l(a6),UT_p20l(a6),add_,#30
-  LS_ARITH_TEST_BASE.l UT_m10l(a6),UT_p20l(a6),add_,#10
-  LS_ARITH_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),add_,#-30
-
-
-  TEST_NAME 'sub_'
-
-  LS_ARITH_TEST #30,#20,sub_,#10
-  LS_ARITH_TEST #10,#30,sub_,#-20
-  LS_ARITH_TEST #-10,#-20,sub_,#10
-
-  LS_ARITH_TEST_BASE.w UT_p30(a6),UT_p20(a6),sub_,#10
-  LS_ARITH_TEST_BASE.w UT_p10(a6),UT_p30(a6),sub_,#-20
-  LS_ARITH_TEST_BASE.w UT_m10(a6),UT_m20(a6),sub_,#10
-
-  LS_ARITH_TEST_BASE.l UT_p30l(a6),UT_p20l(a6),sub_,#10
-  LS_ARITH_TEST_BASE.l UT_p10l(a6),UT_p30l(a6),sub_,#-20
-  LS_ARITH_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),sub_,#10
-
-
-  TEST_NAME 'mul'
-
-  LS_ARITH_TEST_BASE.w #10,#20,mul,#200
-  LS_ARITH_TEST_BASE.w #10,#-20,mul,#-200
-  LS_ARITH_TEST_BASE.w #-10,#-20,mul,#200
-
-  LS_ARITH_TEST_BASE.w UT_p10(a6),UT_p20(a6),mul,#200
-  LS_ARITH_TEST_BASE.w UT_p10(a6),UT_m20(a6),mul,#-200
-  LS_ARITH_TEST_BASE.w UT_m10(a6),UT_m20(a6),mul,#200
-
-
-  TEST_NAME 'div'
-
-  LS_ARITH_TEST_BASE.w #200,#10,div,#20
-  LS_ARITH_TEST_BASE.w #200,#-10,div,#-20
-  LS_ARITH_TEST_BASE.w #-200,#-10,div,#20
-
-
-  TEST_NAME 'mod'
-
-  LS_ARITH_TEST_BASE.w #15,#10,mod,#5
-  LS_ARITH_TEST_BASE.w #15,#5,mod,#0
-  LS_ARITH_TEST_BASE.w #30,#20,mod,#10
-
-
-  TEST_NAME 'and_'
-
-  LS_ARITH_TEST #$ff00,#$f0f0,and_,#$f000
-  LS_ARITH_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),and_,#$f000
-
-
-  TEST_NAME 'or_'
-
-  LS_ARITH_TEST #$ff00,#$f0f0,or_,#$fff0
-  LS_ARITH_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),or_,#$fff0
-
-
-  TEST_NAME 'xor_'
-
-  LS_ARITH_TEST #$ff00,#$f0f0,xor_,#$0ff0
-  LS_ARITH_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),xor_,#$0ff0
-
-
-  TEST_NAME 'asr_'
-
-  LS_ROT_TEST #1024,#6,asr_,#16
-  LS_ROT_TEST #-1024,#6,asr_,#-16
-
-
-  TEST_NAME 'asl_'
-
-  LS_ROT_TEST #16,#6,asl_,#1024
-  LS_ROT_TEST #-16,#6,asl_,#-1024
-
-
-  TEST_NAME 'ror_'
-
-  LS_ROT_TEST_BASE.w #$1234,#4,ror_,#$4123
-  LS_ROT_TEST_BASE.l #$12345678,#4,ror_,#$81234567
-
-
-  TEST_NAME 'rol_'
-
-  LS_ROT_TEST_BASE.w #$1234,#4,rol_,#$2341
-  LS_ROT_TEST_BASE.l #$12345678,#4,rol_,#$23456781
-
-  ENDC	; UT_ARITH_TESTS
-
-
-  IF UT_IF_TESTS=1
-
-  TEST_NAME 'if_eq'
-
-  LS_IF_TEST #15,#15,if_eq,#UT_TRUE
-  LS_IF_TEST #15,#10,if_eq,#UT_FALSE
-  LS_IF_TEST_BASE_w UT_p10(a6),#10,if_eq,#UT_TRUE
-  LS_IF_TEST_BASE_w UT_p10(a6),#0,if_eq,#UT_FALSE
-  LS_IF_TEST_BASE_l UT_p10l(a6),#10,if_eq,#UT_TRUE
-  LS_IF_TEST_BASE_l UT_p10l(a6),#0,if_eq,#UT_FALSE
-
-
-  TEST_NAME 'if_ne'
-
-  LS_IF_TEST #15,#15,if_ne,#UT_FALSE
-  LS_IF_TEST #15,#10,if_ne,#UT_TRUE
-  LS_IF_TEST_BASE_w UT_p10(a6),#10,if_ne,#UT_FALSE
-  LS_IF_TEST_BASE_w UT_p10(a6),#0,if_ne,#UT_TRUE
-  LS_IF_TEST_BASE_l UT_p10l(a6),#10,if_ne,#UT_FALSE
-  LS_IF_TEST_BASE_l UT_p10l(a6),#0,if_ne,#UT_TRUE
-
-
-; signed if
-  TEST_NAME 'if_lo'
-
-  LS_IF_TEST #20,#15,if_lo,#UT_FALSE
-  LS_IF_TEST #15,#15,if_lo,#UT_FALSE
-  LS_IF_TEST #10,#15,if_lo,#UT_TRUE
-  LS_IF_TEST #10,#-10,if_lo,#UT_FALSE
-  LS_IF_TEST #-10,#10,if_lo,#UT_TRUE
-
-
-  TEST_NAME 'if_ls'
-
-  LS_IF_TEST #20,#15,if_ls,#UT_FALSE
-  LS_IF_TEST #15,#15,if_ls,#UT_TRUE
-  LS_IF_TEST #10,#15,if_ls,#UT_TRUE
-  LS_IF_TEST #10,#-10,if_ls,#UT_FALSE
-  LS_IF_TEST #-10,#10,if_ls,#UT_TRUE
-
-
-  TEST_NAME 'if_hi'
-
-  LS_IF_TEST #20,#15,if_hi,#UT_TRUE
-  LS_IF_TEST #15,#15,if_hi,#UT_FALSE
-  LS_IF_TEST #10,#15,if_hi,#UT_FALSE
-  LS_IF_TEST #10,#-10,if_hi,#UT_TRUE
-  LS_IF_TEST #-10,#10,if_hi,#UT_FALSE
-
-
-  TEST_NAME 'if_hs'
-
-  LS_IF_TEST #20,#15,if_hs,#UT_TRUE
-  LS_IF_TEST #15,#15,if_hs,#UT_TRUE
-  LS_IF_TEST #10,#15,if_hs,#UT_FALSE
-  LS_IF_TEST #10,#-10,if_hs,#UT_TRUE
-  LS_IF_TEST #-10,#10,if_hs,#UT_FALSE
-
-
-; unsigned if
-  TEST_NAME 'if_ulo'
-
-  LS_IF_TEST #20,#15,if_ulo,#UT_FALSE
-  LS_IF_TEST #15,#15,if_ulo,#UT_FALSE
-  LS_IF_TEST #10,#15,if_ulo,#UT_TRUE
-  LS_IF_TEST #10,#-10,if_ulo,#UT_TRUE
-  LS_IF_TEST #-10,#10,if_ulo,#UT_FALSE
-
-
-  TEST_NAME 'if_uls'
-
-  LS_IF_TEST #20,#15,if_uls,#UT_FALSE
-  LS_IF_TEST #15,#15,if_uls,#UT_TRUE
-  LS_IF_TEST #10,#15,if_uls,#UT_TRUE
-  LS_IF_TEST #10,#-10,if_uls,#UT_TRUE
-  LS_IF_TEST #-10,#10,if_uls,#UT_FALSE
-
-
-  TEST_NAME 'if_uhi'
-
-  LS_IF_TEST #20,#15,if_uhi,#UT_TRUE
-  LS_IF_TEST #15,#15,if_uhi,#UT_FALSE
-  LS_IF_TEST #10,#15,if_uhi,#UT_FALSE
-  LS_IF_TEST #10,#-10,if_uhi,#UT_FALSE
-  LS_IF_TEST #-10,#10,if_uhi,#UT_TRUE
-
-
-  TEST_NAME 'if_uhs'
-
-  LS_IF_TEST #20,#15,if_uhs,#UT_TRUE
-  LS_IF_TEST #15,#15,if_uhs,#UT_TRUE
-  LS_IF_TEST #10,#15,if_uhs,#UT_FALSE
-  LS_IF_TEST #10,#-10,if_uhs,#UT_FALSE
-  LS_IF_TEST #-10,#10,if_uhs,#UT_TRUE
-
-  ENDC	; UT_IF_TESTS
-
-
-
-  IF UT_ALLOC_TESTS=1
-
-  TEST_CASE
-  alloc UT_mempool(a6),#1000
-  sub_.l UT_mempool(a6)
-  LS_COMPARE_RESULT.l #-1000
-
-  TEST_CASE
-  alloc UT_mempool(a6),#2000
-  sub_.l UT_mempool(a6)
-  LS_COMPARE_RESULT.l #-2000
-
-  ENDC ; UT_ALLOC_TESTS
-
-
-  IF UT_LIST_TESTS=1
-
-  TEST_NAME 'list'
-
-  TEST_CASE
-  UT_CREATE_DEMO_LIST asc
-  UT_COMPARE_DEMO_LIST list_values_sorted(pc),(a2)+
-
-  TEST_CASE
-  UT_CREATE_DEMO_LIST desc
-  UT_COMPARE_DEMO_LIST list_values_sorted+NUM_LIST_VALUES*2(pc),-(a2)
-
-  ENDC	; UT_LIST_TESTS
+	move.w #10,UT_p10(a6)
+	move.w #20,UT_p20(a6)
+	move.w #30,UT_p30(a6)
+	move.w #-10,UT_m10(a6)
+	move.w #-20,UT_m20(a6)
+	move.w #-30,UT_m30(a6)
+
+	move.l #10,UT_p10l(a6)
+	move.l #20,UT_p20l(a6)
+	move.l #30,UT_p30l(a6)
+	move.l #-10,UT_m10l(a6)
+	move.l #-20,UT_m20l(a6)
+	move.l #-30,UT_m30l(a6)
+
+	move.w #$f0f0,UT_0xf0f0(a6)
+	move.w #$ff00,UT_0xff00(a6)
 
 ;
-;	All tests successful
+;	Unit tests for arithmetic operations
 ;
 
-  moveq	#0,d0					; Error code for success
-  moveq	#0,d6					;	Reset actual result
-  move.l d0,a5				; Reset failed test pointer
-  rts
+	IF ENABLE_TEST_ARITHMETIC=1
+
+	TEST_NAME 'add_'
+
+	ARITHMETIC_TEST #10,#20,add_,#30
+	ARITHMETIC_TEST #-10,#20,add_,#10
+	ARITHMETIC_TEST #-10,#-20,add_,#-30
+
+	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p20(a6),add_,#30
+	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_p20(a6),add_,#10
+	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),add_,#-30
+
+	ARITHMETIC_TEST_BASE.l UT_p10l(a6),UT_p20l(a6),add_,#30
+	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_p20l(a6),add_,#10
+	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),add_,#-30
+
+
+	TEST_NAME 'sub_'
+
+	ARITHMETIC_TEST #30,#20,sub_,#10
+	ARITHMETIC_TEST #10,#30,sub_,#-20
+	ARITHMETIC_TEST #-10,#-20,sub_,#10
+
+	ARITHMETIC_TEST_BASE.w UT_p30(a6),UT_p20(a6),sub_,#10
+	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p30(a6),sub_,#-20
+	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),sub_,#10
+
+	ARITHMETIC_TEST_BASE.l UT_p30l(a6),UT_p20l(a6),sub_,#10
+	ARITHMETIC_TEST_BASE.l UT_p10l(a6),UT_p30l(a6),sub_,#-20
+	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),sub_,#10
+
+
+	TEST_NAME 'mul'
+
+	ARITHMETIC_TEST_BASE.w #10,#20,mul,#200
+	ARITHMETIC_TEST_BASE.w #10,#-20,mul,#-200
+	ARITHMETIC_TEST_BASE.w #-10,#-20,mul,#200
+
+	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p20(a6),mul,#200
+	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_m20(a6),mul,#-200
+	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),mul,#200
+
+
+	TEST_NAME 'div'
+
+	ARITHMETIC_TEST_BASE.w #200,#10,div,#20
+	ARITHMETIC_TEST_BASE.w #200,#-10,div,#-20
+	ARITHMETIC_TEST_BASE.w #-200,#-10,div,#20
+
+
+	TEST_NAME 'mod'
+
+	ARITHMETIC_TEST_BASE.w #15,#10,mod,#5
+	ARITHMETIC_TEST_BASE.w #15,#5,mod,#0
+	ARITHMETIC_TEST_BASE.w #30,#20,mod,#10
+
+
+	TEST_NAME 'and_'
+
+	ARITHMETIC_TEST #$ff00,#$f0f0,and_,#$f000
+	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),and_,#$f000
+
+
+	TEST_NAME 'or_'
+
+	ARITHMETIC_TEST #$ff00,#$f0f0,or_,#$fff0
+	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),or_,#$fff0
+
+
+	TEST_NAME 'xor_'
+
+	ARITHMETIC_TEST #$ff00,#$f0f0,xor_,#$0ff0
+	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),xor_,#$0ff0
+
+
+	TEST_NAME 'asr_'
+
+	ROT_TEST #1024,#6,asr_,#16
+	ROT_TEST #-1024,#6,asr_,#-16
+
+
+	TEST_NAME 'asl_'
+
+	ROT_TEST #16,#6,asl_,#1024
+	ROT_TEST #-16,#6,asl_,#-1024
+
+
+	TEST_NAME 'ror_'
+
+	ROT_TEST_BASE.w #$1234,#4,ror_,#$4123
+	ROT_TEST_BASE.l #$12345678,#4,ror_,#$81234567
+
+
+	TEST_NAME 'rol_'
+
+	ROT_TEST_BASE.w #$1234,#4,rol_,#$2341
+	ROT_TEST_BASE.l #$12345678,#4,rol_,#$23456781
+
+	ENDC	; ENABLE_TEST_ARITHMETIC
+
+
+;
+;	Unit tests for if_<condition>
+;
+
+	IF ENABLE_TEST_IF=1
+
+	TEST_NAME 'if_eq'	; if equal
+
+	IF_TEST #15,#15,if_eq,#UT_TRUE
+	IF_TEST #15,#10,if_eq,#UT_FALSE
+	IF_TEST_BASE_w UT_p10(a6),#10,if_eq,#UT_TRUE
+	IF_TEST_BASE_w UT_p10(a6),#0,if_eq,#UT_FALSE
+	IF_TEST_BASE_l UT_p10l(a6),#10,if_eq,#UT_TRUE
+	IF_TEST_BASE_l UT_p10l(a6),#0,if_eq,#UT_FALSE
+
+
+	TEST_NAME 'if_ne'	; if not equal
+
+	IF_TEST #15,#15,if_ne,#UT_FALSE
+	IF_TEST #15,#10,if_ne,#UT_TRUE
+	IF_TEST_BASE_w UT_p10(a6),#10,if_ne,#UT_FALSE
+	IF_TEST_BASE_w UT_p10(a6),#0,if_ne,#UT_TRUE
+	IF_TEST_BASE_l UT_p10l(a6),#10,if_ne,#UT_FALSE
+	IF_TEST_BASE_l UT_p10l(a6),#0,if_ne,#UT_TRUE
+
+
+; signed if tests
+
+	TEST_NAME 'if_lo'	; if lower
+
+	IF_TEST #20,#15,if_lo,#UT_FALSE
+	IF_TEST #15,#15,if_lo,#UT_FALSE
+	IF_TEST #10,#15,if_lo,#UT_TRUE
+	IF_TEST #10,#-10,if_lo,#UT_FALSE
+	IF_TEST #-10,#10,if_lo,#UT_TRUE
+
+
+	TEST_NAME 'if_ls' ; if lower or same
+
+	IF_TEST #20,#15,if_ls,#UT_FALSE
+	IF_TEST #15,#15,if_ls,#UT_TRUE
+	IF_TEST #10,#15,if_ls,#UT_TRUE
+	IF_TEST #10,#-10,if_ls,#UT_FALSE
+	IF_TEST #-10,#10,if_ls,#UT_TRUE
+
+
+	TEST_NAME 'if_hi'	; if higher
+
+	IF_TEST #20,#15,if_hi,#UT_TRUE
+	IF_TEST #15,#15,if_hi,#UT_FALSE
+	IF_TEST #10,#15,if_hi,#UT_FALSE
+	IF_TEST #10,#-10,if_hi,#UT_TRUE
+	IF_TEST #-10,#10,if_hi,#UT_FALSE
+
+
+	TEST_NAME 'if_hs'	; if higher or same
+
+	IF_TEST #20,#15,if_hs,#UT_TRUE
+	IF_TEST #15,#15,if_hs,#UT_TRUE
+	IF_TEST #10,#15,if_hs,#UT_FALSE
+	IF_TEST #10,#-10,if_hs,#UT_TRUE
+	IF_TEST #-10,#10,if_hs,#UT_FALSE
+
+
+; unsigned if	tests
+
+	TEST_NAME 'if_ulo'	; if lower (unsigned)
+
+	IF_TEST #20,#15,if_ulo,#UT_FALSE
+	IF_TEST #15,#15,if_ulo,#UT_FALSE
+	IF_TEST #10,#15,if_ulo,#UT_TRUE
+	IF_TEST #10,#-10,if_ulo,#UT_TRUE
+	IF_TEST #-10,#10,if_ulo,#UT_FALSE
+
+
+	TEST_NAME 'if_uls'	; if lower or same (unsigned)
+
+	IF_TEST #20,#15,if_uls,#UT_FALSE
+	IF_TEST #15,#15,if_uls,#UT_TRUE
+	IF_TEST #10,#15,if_uls,#UT_TRUE
+	IF_TEST #10,#-10,if_uls,#UT_TRUE
+	IF_TEST #-10,#10,if_uls,#UT_FALSE
+
+
+	TEST_NAME 'if_uhi'	; if higher (unsigned)
+
+	IF_TEST #20,#15,if_uhi,#UT_TRUE
+	IF_TEST #15,#15,if_uhi,#UT_FALSE
+	IF_TEST #10,#15,if_uhi,#UT_FALSE
+	IF_TEST #10,#-10,if_uhi,#UT_FALSE
+	IF_TEST #-10,#10,if_uhi,#UT_TRUE
+
+
+	TEST_NAME 'if_uhs'	; if higher or same (unsigned)
+
+	IF_TEST #20,#15,if_uhs,#UT_TRUE
+	IF_TEST #15,#15,if_uhs,#UT_TRUE
+	IF_TEST #10,#15,if_uhs,#UT_FALSE
+	IF_TEST #10,#-10,if_uhs,#UT_FALSE
+	IF_TEST #-10,#10,if_uhs,#UT_TRUE
+
+	ENDC	; ENABLE_TEST_IF
+
+;
+;	Tests for allocation from memory pool
+;
+
+	IF ENABLE_TEST_ALLOC=1
+
+	TEST_CASE
+	alloc UT_mempool(a6),#1000
+	sub_.l UT_mempool(a6)
+	COMPARE_RESULT.l #-1000
+
+	TEST_CASE
+	alloc UT_mempool(a6),#2000
+	sub_.l UT_mempool(a6)
+	COMPARE_RESULT.l #-2000
+
+	ENDC ; ENABLE_TEST_ALLOC
+
+
+;
+;	Test for list insertion
+;
+
+	IF ENABLE_TEST_LIST=1
+
+	TEST_NAME 'list'
+
+	TEST_CASE
+	CREATE_DEMO_LIST ascending		; create ascending list
+	COMPARE_DEMO_LIST list_values_sorted(pc),(a2)+
+
+	TEST_CASE
+	CREATE_DEMO_LIST descending	; create descending list
+	COMPARE_DEMO_LIST list_values_sorted+NUM_LIST_VALUES*2(pc),-(a2)
+
+	ENDC	; ENABLE_TEST_LIST
+
+;
+;	All tests successful (hooray!)
+;
+
+	moveq	#0,d0					; Error code for success
+	moveq	#0,d6					;	Reset actual result
+	move.l d0,a5				; Reset previous test pointer
+	rts
 
 ;
 ;	Test failed!
 ;
 
-UT_test_failed
-  move.l d0,d6				; Failed test result to d6
-  moveq #-1,d0				; Error code for failed test
-  rts
+test_failed_exit
+	move.l d0,d6				; Failed test result to d6
+	moveq #-1,d0				; Error code for failed test
+	rts
 
 
 
@@ -321,7 +336,8 @@ list_values_sorted
 
 	section fast_area,bss
 
-;	Memory area for unit tests
+;	Memory area for unit test context, 
+; allocation and list tests
 
 membuffer
 	ds.b $1000

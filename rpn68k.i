@@ -9,5 +9,5 @@
 
 	include	rpn68k_base.i
 	include	rpn68k_arithmetic.i
-	include rpn68k_branching.i
+	include rpn68k_branch.i
 	include rpn68k_if.i
