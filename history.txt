@@ -1,0 +1,20 @@
+*** 25-feb-20
+
+RPN68K_INIT is executed in rpn68k.i, no need to call it in application
+
+Asmone fix and unit tests for max, min, umax, umin
+
+Unit tests for loops
+
+
+*** 24-feb-20
+
+New command: loop_in_const
+- like loop_in with argument but optimized for constants (no zero check)
+
+Some labels in unit_test.s for quick disassembly
+
+
+*** 23-feb-20
+
+Initial release
