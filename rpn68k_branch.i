@@ -62,7 +62,7 @@ loop_in macro
 	endm
 
 loop_in_const macro
-	ldc #\1-1
+	ldc #(\1)-1
 	LS_PUSH_LABEL
 
 	LS_PUSH_LABEL

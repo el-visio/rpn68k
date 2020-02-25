@@ -2,15 +2,18 @@
 
 RPN68K_INIT is executed in rpn68k.i, no need to call it in application
 
-Asmone fix and unit tests for max, min, umax, umin
+Asmone fix and unit tests for max, min, umax, umin 
+- TODO: 32-bit versions, optimize argument behaviour
 
 Unit tests for loops
+
+If 'restore' is called with an argument the value is stored to a new location
 
 
 *** 24-feb-20
 
 New command: loop_in_const
-- like loop_in with argument but optimized for constants (no zero check)
+- like loop_in with #xx argument but optimized for constants (no zero check)
 
 Some labels in unit_test.s for quick disassembly
 

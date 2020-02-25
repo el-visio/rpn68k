@@ -1,5 +1,6 @@
+;       T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T
 ;
-;	Macros and commands for rpn68k
+;	Fundamental macros and commands for rpn68k
 ;
 
 
@@ -230,6 +231,8 @@ sto macro
 	ENDC
 	endm
 
+;	Drop top of stack
+;	(please use other methods for this where possible)
 drop macro
 	IF LS_CACHED>0
 		LS_SET LS_CACHED,0
@@ -243,6 +246,7 @@ drop macro
 	ENDC
 	ENDC
 	endm
+
 
 RESET_STACK macro
 	lea LOCAL(a7),a7
@@ -270,12 +274,22 @@ dup macro
 	ENDC
 	endm
 
+; Restore cache value
+; If used with argument it will be stored again
+
 restore macro
 	IFC \0,L
 		LS_SET LS_CACHED,4
+		IFNB \1
+			sto.l \1
+		ENDIF
 	ELSE
 		LS_SET LS_CACHED,2
+		IFNB \1
+			sto \1
+		ENDIF
 	ENDC
+
 	endm
 
 LS_ARRAY_LEN macro
@@ -288,6 +302,7 @@ LS_ARRAY_LEN macro
 \1 equ (*-\2)/(\3)
 	endm
 
+;	Get pointer to string
 string macro
 	ld_addr .string\@(pc)
 	bra .next\@
