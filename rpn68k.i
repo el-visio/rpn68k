@@ -11,3 +11,5 @@
 	include	rpn68k_arithmetic.i
 	include rpn68k_branch.i
 	include rpn68k_if.i
+
+	RPN68K_INIT

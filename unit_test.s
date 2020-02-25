@@ -6,31 +6,38 @@
 ;	Build and run, then see register values for information
 ;
 ;	d0:  $0000 success
-;		   $ffff unit test failed
+;	     $ffff unit test failed
 ;	
-;	d6:  actual value for a failed test
+;	d6:  actual result for a failed test
 ;
 ;	d7:  number of succesful test cases (also the index of
-;			 failed test if any)
+;	     failed test if any)
 ;
-;	a5:	 pointer to failed test, disassemble here to investigate
+;	a5:  pointer to failed test, disassemble here to investigate
 ;
 
 	include rpn68k.i
 	include list.i
 	include unit_test.i
 
+
 ENABLE_TEST_ARITHMETIC	equ 1	; Enable tests for arithmetic commands
+ENABLE_TEST_LOOPS				equ 1	; Enable tests for loops
 ENABLE_TEST_IF					equ 1	; Enable tests for if commands
 ENABLE_TEST_ALLOC				equ 1	; Enable tests for memory allocation
 ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
+
+
+PRIME_1 equ 3		;	Constants for loop tests
+PRIME_2	equ 5		;
+PRIME_3 equ 7		;
+
 
 ;
 ;	Unit test start
 ;
 
-	RPN68K_INIT		; init rpn68k
-
+start
 	moveq #0,d7								; Reset unit test index
 
 	lea membuffer,a6					; Membuffer pointer to a6
@@ -61,6 +68,8 @@ ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 ;
 
 	IF ENABLE_TEST_ARITHMETIC=1
+
+unit_test_arithmetic
 
 	TEST_NAME 'add_'
 
@@ -135,6 +144,38 @@ ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),xor_,#$0ff0
 
 
+	TEST_NAME 'max'
+
+	ARITHMETIC_TEST_BASE.w #10,#20,max,#20
+	ARITHMETIC_TEST_BASE.w #-10,#20,max,#20
+	ARITHMETIC_TEST_BASE.w #20,#10,max,#20
+	ARITHMETIC_TEST_BASE.w #20,#-10,max,#20
+
+
+	TEST_NAME 'min'
+
+	ARITHMETIC_TEST_BASE.w #10,#20,min,#10
+	ARITHMETIC_TEST_BASE.w #-10,#20,min,#-10
+	ARITHMETIC_TEST_BASE.w #20,#10,min,#10
+	ARITHMETIC_TEST_BASE.w #20,#-10,min,#-10
+
+
+	TEST_NAME 'umax'
+
+	ARITHMETIC_TEST_BASE.w #10,#20,umax,#20
+	ARITHMETIC_TEST_BASE.w #$f000,#20,umax,#$f000
+	ARITHMETIC_TEST_BASE.w #20,#10,umax,#20
+	ARITHMETIC_TEST_BASE.w #20,#$f000,umax,#$f000
+
+
+	TEST_NAME 'umin'
+
+	ARITHMETIC_TEST_BASE.w #10,#20,umin,#10
+	ARITHMETIC_TEST_BASE.w #$f000,#20,umin,#20
+	ARITHMETIC_TEST_BASE.w #20,#10,umin,#10
+	ARITHMETIC_TEST_BASE.w #20,#$f000,umin,#20
+
+
 	TEST_NAME 'asr_'
 
 	ROT_TEST #1024,#6,asr_,#16
@@ -162,10 +203,91 @@ ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 
 
 ;
+;	Unit tests for loops
+;
+
+	IF ENABLE_TEST_LOOPS=1
+
+unit_test_loops
+
+	TEST_NAME 'loop_in'
+
+
+	TEST_CASE			; loop value is arg
+
+	ld.l #0,loop_res1		; test result
+
+	loop_in #PRIME_1
+		loop_in #PRIME_2
+			loop_in #PRIME_3
+				inc.l loop_res1+LOCAL(a7)
+			loop_out
+		loop_out			
+	loop_out
+
+	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
+
+
+	TEST_CASE		; loop value is cached
+
+	ld.l #0,loop_res2		; test result
+
+	ldc #PRIME_1
+	loop_in
+		ldc #PRIME_2
+		loop_in
+			ldc #PRIME_3
+			loop_in
+				inc.l loop_res2+LOCAL(a7)
+			loop_out
+		loop_out			
+	loop_out
+
+	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
+
+
+	TEST_CASE		; loop value is in stack
+
+	ld.l #0,loop_res3		; test result
+
+	ld #PRIME_1
+	loop_in
+		ld #PRIME_2
+		loop_in
+			ld #PRIME_3
+			loop_in
+				inc.l loop_res3+LOCAL(a7)
+			loop_out
+		loop_out			
+	loop_out
+
+	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
+
+
+	TEST_CASE		; loop_in_const
+
+	ld.l #0,loop_res4		; test result
+
+	loop_in_const PRIME_1
+		loop_in_const PRIME_2
+			loop_in_const PRIME_3
+				inc.l loop_res4+LOCAL(a7)
+			loop_out
+		loop_out			
+	loop_out
+
+	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
+
+
+	ENDC	; ENABLE_TEST_LOOPS
+
+;
 ;	Unit tests for if_<condition>
 ;
 
 	IF ENABLE_TEST_IF=1
+
+unit_test_if
 
 	TEST_NAME 'if_eq'	; if equal
 
@@ -270,6 +392,8 @@ ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 
 	IF ENABLE_TEST_ALLOC=1
 
+unit_test_alloc
+
 	TEST_CASE
 	alloc UT_mempool(a6),#1000
 	sub_.l UT_mempool(a6)
@@ -288,6 +412,8 @@ ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 ;
 
 	IF ENABLE_TEST_LIST=1
+
+unit_test_list
 
 	TEST_NAME 'list'
 

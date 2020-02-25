@@ -1,3 +1,5 @@
+;       T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T
+
 LS_LABEL macro
 	IF \1=0
 LA_\2
@@ -54,6 +56,14 @@ loop_in macro
 
 	LS_PUSH_LABEL
 	LS_JUMP bra,(_0&LS_MASK_LABEL)
+
+	LS_PUSH_LABEL
+	LS_LABEL (_0&LS_MASK_LABEL)
+	endm
+
+loop_in_const macro
+	ldc #\1-1
+	LS_PUSH_LABEL
 
 	LS_PUSH_LABEL
 	LS_LABEL (_0&LS_MASK_LABEL)

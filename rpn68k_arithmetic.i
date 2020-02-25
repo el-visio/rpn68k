@@ -230,7 +230,12 @@ mul12f macro
 	endm
 
 square12f macro
-	LS_CACHE
+	IFNB \1
+		ldc \1
+	ELSE
+		LS_CACHE
+	ENDC
+
 	muls d0,d0
 	asr_.l #6
 	asr_.l #6
@@ -280,13 +285,15 @@ min macro
 	ELSE
 		LS_CACHE
 	ENDC
+
 	cmp.w (a7),d0
-	bgt hi\@
-	add.w #2,a7
-	bra exit\@
-hi\@
+
+	dc.w $6e04		; asmone workaround
+	addq #2,a7
+
+	dc.w $6002		; asmone workaround
 	move.w (a7)+,d0
-exit\@
+
 LOCAL set LOCAL-2
 	endm
 
@@ -297,13 +304,15 @@ max macro
 	ELSE
 		LS_CACHE
 	ENDC
+
 	cmp.w (a7),d0
-	bgt hi\@
+
+	dc.w $6e04		; asmone workaround
 	move.w (a7)+,d0
-	bra exit\@
-hi\@
-	add.w #2,a7
-exit\@
+
+	dc.w $6002		; asmone workaround
+	addq #2,a7
+
 LOCAL set LOCAL-2
 	endm
 
@@ -314,13 +323,16 @@ umin macro
 	ELSE
 		LS_CACHE
 	ENDC
+
 	cmp.w (a7),d0
-	bhi hi\@
-	add.w #2,a7
-	bra exit\@
-hi\@
+
+	dc.w $6204		; asmone workaround
+	addq #2,a7
+
+	dc.w $6002		; asmone workaround
 	move.w (a7)+,d0
-exit\@
+
+
 LOCAL set LOCAL-2
 	endm
 
@@ -333,11 +345,12 @@ umax macro
 	ENDC
 
 	cmp.w (a7),d0
-	bhi hi\@
+
+	dc.w $6204		; asmone workaround
 	move.w (a7)+,d0
-	bra exit\@
-hi\@
-	add.w #2,a7
-exit\@
+
+	dc.w $6002		; asmone workaround
+	addq #2,a7
+
 LOCAL set LOCAL-2
 	endm

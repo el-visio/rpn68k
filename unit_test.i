@@ -64,7 +64,7 @@ COMPARE_RESULT macro
 
 	ELSE
 		LS_CACHE
-		and.l #$ffff,d0					; mask higher word
+;		and.l #$ffff,d0					; mask higher word
 		drop
 		cmp.w \1,d0
 		bne test_failed_exit
