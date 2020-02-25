@@ -12,7 +12,7 @@ Featuring
 - local variables
 - structured assembly: if / else / endif, range loops, while loops - and _everything can be nested_
 - functions with input and output
-- inline assembly because it IS assembly
+- inline assembly because it _IS_ assembly
 
 
 ## What can rpn68k do for YOU?
@@ -87,11 +87,12 @@ sqrt_table:
 ## How to get started with rpn68k
 
 Currently:
-- Build the unit tests then disassemble (sorry!)
-- Check out the UNFINISHED demo project in wip branch
+- Build the unit tests then disassemble (sorry..)
+- Check out [the UNFINISHED demo project in WIP branch](https://github.com/el-visio/rpn68k/blob/wip-donut-demo/donut_demo.s?ts=2) (Amiga OCS!)
 
-In very near future: 
-- Check out the documentation and the FINISHED demo project
+In _very near_ future: 
+- Read the documentation 
+- Check out the FINISHED demo project
 
 
 
