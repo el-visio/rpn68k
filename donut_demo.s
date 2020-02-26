@@ -45,19 +45,19 @@ MAX_INNER_RADIUS equ $0600
 CONST_1_0 			equ 1<<12				; 1.0 in 12 bit fixed point
 
 
-start	
+start
 	lea	fast_area,a6
 	lea SIZEOF_GB(a6),a1
 	move.l a1,GB_fast(a6)
 	move.l #chip_area,GB_chip(a6)
 
+
+;	Generate 32k square root table (12 bit fixed point)
+
 	alloc GB_fast(a6),#$8000
 	sto GB_sqrt_tbl(a6)
 
 	restore.l a0		; sqrt table buffer to a0
-
-
-;	Generate 32k square root table (12 bit fixed point)
 
 	ld #0,value			; value = 0
 	ld #0,sqroot		; sqroot = 0
@@ -149,7 +149,7 @@ calc_sin
 	sto.l GB_sdf_bitmap(a6)
 
 
-; allocate space for 64 textures
+;	Allocate space for 64 textures
 
 	alloc GB_chip(a6),#16*2*2*64	
 	sto.l GB_texture(a6)
@@ -160,13 +160,13 @@ calc_sin
 		var donut_idx								; variable name for loop_in counter
 		move.l GB_dist_tbl(a6),a0		; pointer to 16x16 distance table
 
-		ld donut_idx+LOCAL(a7)			; calculate outer radius
+		ldc donut_idx+LOCAL(a7)			; calculate outer radius
 		inc													;
 		asl_ #6											;	
 		mul12f #MAX_OUTER_RADIUS		;
 		var outer_r									; variable name
 
-		ld donut_idx+LOCAL(a7)			; calculate inner radius
+		ldc donut_idx+LOCAL(a7)			; calculate inner radius
 		inc													;
 		asl_ #6											;
 		mul12f #MAX_INNER_RADIUS		;
