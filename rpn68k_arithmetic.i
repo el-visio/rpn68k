@@ -142,6 +142,30 @@ div macro
 	ENDC
 	endm
 
+div12f macro
+	IFNB \1
+		LS_CACHE
+		ext.l d0
+		asl.l #6,d0
+		asl.l #6,d0
+		divs \1,d0
+	ELSE 
+		IF LS_CACHED=0
+			move.w (a7)+,d1
+			LS_SET LOCAL,LOCAL-2
+		ELSE
+			move.w d0,d1
+			drop
+		ENDC
+
+		LS_CACHE
+		ext.l d0        
+		asl.l #6,d0
+		asl.l #6,d0
+		divs d1,d0
+	ENDC
+	endm
+
 ; todo mod.l should use 32-bit source value
 mod macro
 	IFNB \1

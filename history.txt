@@ -1,3 +1,8 @@
+*** 26-feb-20
+
+New command: div12f
+
+
 *** 25-feb-20
 
 RPN68K_INIT is executed in rpn68k.i, no need to call it in application
