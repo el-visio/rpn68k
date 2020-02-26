@@ -19,6 +19,7 @@
 	include hardware/custom.i			;	Amiga include files
 	include hardware/intbits.i		; (Google is your friend)
 	include hardware/dmabits.i		;
+	include hardware/blit.i
 
 
 ;	Global struct
@@ -36,6 +37,12 @@ GB_texture		rs.l 1
 GB_time				rs.l 1
 SIZEOF_GB			rs.l 0
 
+WAIT_BLIT macro
+wb\@	btst	#14,dmaconr(\1)
+	bne	wb\@
+	endm
+
+
 SDF_PLANE_WIDTH equ 44
 SDF_PLANE_HEIGHT equ 288
 
@@ -43,6 +50,7 @@ MAX_OUTER_RADIUS equ $0f00
 MAX_INNER_RADIUS equ $0600
 
 CONST_1_0 			equ 1<<12				; 1.0 in 12 bit fixed point
+
 
 
 start
@@ -105,8 +113,8 @@ start
 ;	(old piece of code from Damones demo, not rpn68k style)
 
 	alloc GB_fast(a6),#$10000
-	sto GB_sin_tbl(a6)
-	restore.l a0
+;	sto GB_sin_tbl(a6)
+	sto.l a0
 
 calc_sin
 	move.l a0,a1
@@ -142,6 +150,8 @@ calc_sin
 
 	dbf d0,.1
 
+	move.l a0,GB_sin_tbl(a6)		; Pointer to middle of sin table
+
 
 ;	Allocate screen bitmap
 
@@ -158,34 +168,40 @@ calc_sin
 
 	loop_in_const 64							; generate 64 bitmaps
 		var donut_idx								; variable name for loop_in counter
-		move.l GB_dist_tbl(a6),a0		; pointer to 16x16 distance table
 
 		ldc donut_idx+LOCAL(a7)			; calculate outer radius
-		inc													;
-		asl_ #6											;	
-		mul12f #MAX_OUTER_RADIUS		;
+		add_ #26
+		div12f #100	
 		var outer_r									; variable name
 
 		ldc donut_idx+LOCAL(a7)			; calculate inner radius
-		inc													;
-		asl_ #6											;
-		mul12f #MAX_INNER_RADIUS		;
+		add_ #90
+		div12f #180
+		sub_ #$200
 		var inner_r									; variable name
+
+		move.l GB_dist_tbl(a6),a0		; pointer to 16x16 distance table
 
 		loop_in_const 16
 			loop_in_const 16
 				ldc (a0)									; get distance from center
 				sub_ outer_r+LOCAL(a7)		; outer circle radius
 				
-				ldc (a0)+								; get distance from center
+				ldc (a0)								; get distance from center
 				sub_ inner_r+LOCAL(a7)	; inner circle radius
-				neg_					; negate inner circle
-				max						; substract inner from outer
+				neg_										; negate inner circle
+				max											; substract inner from outer
+
+				ldc (a0)+								; get distance from center
+				ldc outer_r+LOCAL(a7)		; outer_r - 0.5
+				sub_ #CONST_1_0/2				;
+				sub_										;
+				min											; add to signed distance field
 
 				neg_				; calculate 2 bit anti-alias 
-				add_ #$100	;
-				max #0			; 
-				asr_ #8			;
+				add_ #$300	;
+				max #0			;
+				asr_ #8
 				min #3			;
 
 				roxr.w #1,d0	; chunky bit for plane 0
@@ -277,38 +293,94 @@ tick
 	move.l (a0)+,(a2)+
 
 
-	; Calculate texture offset
+	; setup blitter
 
-	move.l GB_texture(a6),a2
-	ldc	GB_time+2(a6)		; lower word of GB_time
-	and_ #$003f					; keep lower bits as an index
-	asl_ #6							; multiply by texture size
-	add_to a2						; add to texture pointer
+	WAIT_BLIT a5
+
+	move.l a2,bltapt(a5)
+	move.l a3,bltdpt(a5)
+	move.w #SRCA+DEST+$f0,bltcon0(a5)
+	move.w #0,bltcon1(a5)
+	move.l #-1,bltafwm(a5)
+	move.w #0,bltamod(a5)
+	move.w #SDF_PLANE_WIDTH-2,bltdmod(a5)
 
 
-	; Copy texture to screen, start at the middle
+	ldc GB_time+2(a6)
+	mul #700
+	var sin_y1
 
-	move.w #SDF_PLANE_WIDTH*(SDF_PLANE_HEIGHT/2-8)*2,d2
+	ldc GB_time+2(a6)
+	mul #-500
+	var sin_y2
 
-	loop_in_const SDF_PLANE_WIDTH/2
-		move.l GB_sdf_bitmap(a6),a3
-		add.w d2,a3
-		push.l a2							; store texture pointer
+	move.l GB_sin_tbl(a6),a2			; sin table
+	move.l GB_sdf_bitmap(a6),a3		; output bitmap
 
-		LS_SET DEST_OFFSET,0		; Unroll texture copy. TODO use blitter!
-		REPT 32
-			move.w (a2)+,DEST_OFFSET(a3)
-			LS_SET DEST_OFFSET,DEST_OFFSET+SDF_PLANE_WIDTH
-		ENDR
 
-		pop.l a2
-		add.w #2,d2
+	loop_in_const SDF_PLANE_HEIGHT/16			; y loop
+		moveq #0,d2
+
+		ldc sin_y1+LOCAL(a7)
+		move.w (a2,d0.w),d0			; get sin
+
+		ldc sin_y2+LOCAL(a7)
+		move.w (a2,d0.w),d0			; get sin
+		add_
+
+		var sin_y
+
+		ldc GB_time+2(a6)
+		mul #500
+		var sin_x1
+
+		ldc GB_time+2(a6)
+		mul #-700
+		var sin_x2
+
+		loop_in_const SDF_PLANE_WIDTH/2				; x loop
+			lea (a3,d2.w),a1
+
+			ldc sin_x1+LOCAL(a7)
+			move.w (a2,d0.w),d0			; sin pt
+
+			ldc sin_x2+LOCAL(a7)
+			move.w (a2,d0.w),d0			; sin pt
+			add_
+
+			add_ sin_y+LOCAL(a7)
+			asr_ #2
+
+			mul12f #31
+			add_ #32
+			asl_ #6
+			ext.l d0
+			restore.l			
+			add_.l GB_texture(a6)
+			
+			WAIT_BLIT a5
+			sto.l bltapt(a5)
+			move.l a1,bltdpt(a5)
+			move.w #32<<6+1,bltsize(a5)
+			addq #2,d2
+
+			add.w #$1000,sin_x1+LOCAL(a7)
+			add.w #$1400,sin_x2+LOCAL(a7)
+			
+		loop_out
+
+		add.w #$1000,sin_y1+LOCAL(a7)
+		add.w #$1400,sin_y2+LOCAL(a7)
+
+		lea SDF_PLANE_WIDTH*32(a3),a3
 	loop_out
+
+	RESET_STACK
 
 	rts
 
 colors
-	dc.w $000,$555,$aaa,$fff
+	dc.w $c8c,$95b,$426,$203
 
 
 	section fast_area,bss
