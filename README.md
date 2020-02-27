@@ -8,10 +8,10 @@ _"Special tool for special people"_
 A macro extension for Motorola 68000 assembly with Forth inspired syntax. Improve your development time without slowing down the code. 
 
 Featuring
-- stack arithmetic (also fixed point operations), top of stack automatically cached
-- local variables
+- hybrid accumulator / stack arithmetic, also fixed point operations
+- named local variables
 - structured assembly: if / else / endif, range loops, while loops - and _everything can be nested_
-- functions with input and output
+- functions with input and output values
 - inline assembly because it _IS_ assembly
 
 
@@ -87,8 +87,9 @@ sqrt_table:
 ## How to get started with rpn68k
 
 Currently:
-- Build the unit tests then disassemble (sorry..)
+- Build the [unit tests](https://github.com/el-visio/rpn68k/blob/master/unit_test.s?ts=2) then disassemble
 - Check out [the UNFINISHED demo project in WIP branch](https://github.com/el-visio/rpn68k/blob/wip-donut-demo/donut_demo.s?ts=2) (Amiga OCS!)
+- Educate yourself about [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation). Note: While the classic RPN style can be used you'll get the maximum performance with a few rpn68k specific optimization tricks - THEN _you're playing with power!_ 
 
 In _very near_ future: 
 - Read the documentation 
