@@ -92,13 +92,53 @@ LS_ARG macro
 	ENDC
 	endm
 
-LS_OP_SIZE macro
+
+LS_FLAGS_SIZE_MASK		equ	7
+LS_FLAGS_HAS_ARG 			equ	(1<<3)
+LS_FLAGS_HAS_ARG2			equ	(1<<4)
+LS_FLAGS_B 						equ	(1<<5)
+LS_FLAGS_W 						equ	(1<<6)
+LS_FLAGS_L 						equ	(1<<7)
+LS_FLAGS_CACHE_SHIFT 	equ	8
+LS_FLAGS_CACHE_MASK 	equ	(7<<LS_FLAGS_CACHE_SHIFT)
+LS_FLAGS_SPLIT_ARG		equ (1<<11)
+
+
+LS_FLAGS_1 macro
+;	Set flags for command - op size
+;
+;	\1 Command name
+;	\2 Command size (= \0 from the original command)
+
 	IFC \2,L
-OP_SIZE_\1 set 4
+		LS_SET LS_FLAGS_\1,(4|LS_FLAGS_L)
 	ELSE
-OP_SIZE_\1 set 2
-	ENDC 
+	IFC \2,B
+		LS_SET LS_FLAGS_\1,(1|LS_FLAGS_B)
+	ELSE
+		LS_SET LS_FLAGS_\1,(2|LS_FLAGS_W)
+	ENDC
+	ENDC
+
 	endm
+
+LS_FLAGS_2 macro
+;	Set flags for command - arguments
+;
+;	\1 Command name
+;	\2 Command arg 1 (= \1 from the original command)
+;	\3 Command arg 2 (= \2 from the original command)
+
+	IFNB \2
+		LS_SET LS_FLAGS_\1,(LS_FLAGS_\1|LS_FLAGS_HAS_ARG)
+	ENDC
+
+	IFNB \3
+		LS_SET LS_FLAGS_\1,(LS_FLAGS_\1|LS_FLAGS_HAS_ARG2)
+	ENDC
+	endm
+
+
 	
 alloc macro
 	IFNB \2

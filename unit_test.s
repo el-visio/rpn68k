@@ -111,6 +111,17 @@ unit_test_arithmetic
 	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_m20(a6),mul,#-200
 	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),mul,#200
 
+	ARITHMETIC_TEST_wwl #$1000,#$2000,mul,#$02000000
+	ARITHMETIC_TEST_wwl #$1000,#-$2000,mul,#$fe000000
+
+
+	TEST_NAME 'mul12f'
+
+	ARITHMETIC_TEST_BASE.w #$200,#1<<11,mul12f,#$100
+	ARITHMETIC_TEST_BASE.w #$200,#1<<13,mul12f,#$400
+
+	ARITHMETIC_TEST_wwl #$7000,#$7000,mul12f,#$31000
+
 
 	TEST_NAME 'div'
 
@@ -198,6 +209,7 @@ unit_test_arithmetic
 
 	ROT_TEST_BASE.w #$1234,#4,rol_,#$2341
 	ROT_TEST_BASE.l #$12345678,#4,rol_,#$23456781
+
 
 	ENDC	; ENABLE_TEST_ARITHMETIC
 

@@ -50,9 +50,10 @@ LS_ARITHMETIC_BASE_COPY macro
 	endm
 
 LS_ARITHMETIC_BASE_2 macro
-	LS_OP_SIZE ar_base_2,\0
+	LS_FLAGS_1 ab2,\0
+
 	IF NARG=2
-		IF OP_SIZE_ar_base_2=4
+		IF LS_FLAGS_ab2&LS_FLAGS_L
 			LS_CACHE.L
 			\1.L \2,d0
 		ELSE
@@ -60,7 +61,7 @@ LS_ARITHMETIC_BASE_2 macro
 			\1 \2,d0
 		ENDC
 	ELSE
-		IF OP_SIZE_ar_base_2=4
+		IF LS_FLAGS_ab2&LS_FLAGS_L
 			LS_CACHE.L
 			\1.L d0,(a7)
 			drop
@@ -73,9 +74,9 @@ LS_ARITHMETIC_BASE_2 macro
 	endm
 
 LS_ARITHMETIC_BASE_3 macro
-	LS_OP_SIZE ar_base_3,\0
+	LS_FLAGS_1 ab3,\0
 
-	IF OP_SIZE_ar_base_3=4
+	IF LS_FLAGS_ab3&LS_FLAGS_L
 		IF NARG=2
 			ldc.l \2
 		ENDIF
@@ -94,9 +95,10 @@ LS_ARITHMETIC_BASE_3 macro
 	endm
 
 LS_ROT_BASE macro
-	LS_OP_SIZE rot_base,\0
+	LS_FLAGS_1 rotb,\0
+
 	IF NARG=2
-		IF OP_SIZE_rot_base=4     ; 32-bit operation
+		IF LS_FLAGS_rotb&LS_FLAGS_L
 			LS_CACHE.L
 			\1.L \2,d0
 		ELSE
@@ -111,7 +113,7 @@ LS_ROT_BASE macro
 			move.w d0,d1
 			drop
 		ENDC
-		IF OP_SIZE_rot_base=4			; 32-bit operation
+		IF LS_FLAGS_rotb&LS_FLAGS_L
 			LS_CACHE.L
 			\1.L d1,d0
 		ELSE
@@ -121,12 +123,53 @@ LS_ROT_BASE macro
 	ENDC
 	endm
 
-; todo div.l should use 32-bit source value
+; div.l uses 32-bit source value
 div macro
+	IFC \0,L
+		IFNB \1
+			LS_CACHE.l
+			divs \1,d0
+		ELSE
+			IF LS_CACHED=0
+				move.w (a7)+,d1					; divider is 16-bit
+				LS_SET LOCAL,LOCAL-2
+			ELSE
+				move.w d0,d1
+				drop
+			ENDC
+
+			LS_CACHE.l
+			divs d1,d0
+		ENDC
+		restore					; 16-bit result
+	ELSE
+		IFNB \1
+		LS_CACHE
+			ext.l d0
+			divs \1,d0
+		ELSE
+			IF LS_CACHED=0
+				move.w (a7)+,d1
+				LS_SET LOCAL,LOCAL-2
+			ELSE
+				move.w d0,d1
+				drop
+			ENDC
+
+			LS_CACHE
+			ext.l d0        
+			divs d1,d0
+		ENDC
+	ENDC
+
+	endm
+
+
+udiv macro
 	IFNB \1
 		LS_CACHE
-		ext.l d0
-		divs \1,d0
+		and.l #$ffff,d0
+		divu \1,d0
 	ELSE
 		IF LS_CACHED=0
 			move.w (a7)+,d1
@@ -137,10 +180,12 @@ div macro
 		ENDC
 
 		LS_CACHE
-		ext.l d0        
-		divs d1,d0
+		and.l #$ffff,d0        
+		divu d1,d0
 	ENDC
 	endm
+
+
 
 div12f macro
 	IFNB \1
@@ -232,7 +277,10 @@ inc macro
 	endm
 
 mul macro
-	IFNB \1
+	LS_FLAGS_1 mul,\0
+	LS_FLAGS_2 mul,\1,\2
+
+	IF LS_FLAGS_mul&LS_FLAGS_HAS_ARG
 		LS_CACHE
 		muls \1,d0
 	ELSE
@@ -241,16 +289,23 @@ mul macro
 		LS_SET LOCAL,LOCAL-2
 	ENDC
 
-	IFC \0,L
+	IF LS_FLAGS_mul&LS_FLAGS_L
 		LS_SET LS_CACHED,4 	; return value for mul.l is int32
 	ENDC
 	endm
 
 mul12f macro
-	mul.L \1
-	asr_.L #6
-	asr_.L #6
-	restore		; cache is now 16-bit
+	LS_FLAGS_1 mul12f,\0
+	LS_FLAGS_2 mul12f,\1,\2
+
+	mul.l \1
+	asr.l #6,d0
+	asr.l #6,d0
+
+	IF LS_FLAGS_mul12f&LS_FLAGS_W
+		restore					; cache is now 16-bit
+	ENDC
+
 	endm
 
 square12f macro

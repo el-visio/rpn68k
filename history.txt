@@ -1,3 +1,13 @@
+*** 02-mar-20
+
+div and mul support .l op size
+
+
+*** 01-mar-20
+
+New command: udiv
+
+
 *** 26-feb-20
 
 New command: div12f

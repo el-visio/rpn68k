@@ -82,8 +82,37 @@ COMPARE_RESULT macro
 	endm
 
 
+; 	For mul.l tests, 2x int16 source values -> int32 result
+ARITHMETIC_TEST_wwl macro
+
+	TEST_CASE 
+	ld \1
+	ld \2
+	\3.l
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ld \1
+	ldc \2
+	\3.l
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ld \1
+	\3.l \2
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ldc \1
+	\3.l \2
+	COMPARE_RESULT.l \4
+
+	endm
+
+
 ARITHMETIC_TEST_BASE macro
-	IFC \0,L
+	LS_FLAGS_1 atbase,\0
+	IF LS_FLAGS_atbase&LS_FLAGS_L
 
 		TEST_CASE 
 		ld.l \1

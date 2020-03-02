@@ -5,15 +5,16 @@ _"Special tool for special people"_
 
 ## What is rpn68k?
 
-A macro extension for Motorola 68000 assembly with Forth inspired syntax. Improve your development time without slowing down the code. 
+A macro extension for Motorola 68000 assembly with Forth\* inspired syntax. Improve your development time without slowing down the code. 
 
 Featuring
-- hybrid accumulator / stack arithmetic, also fixed point operations
-- named local variables
+- hybrid accumulator / stack arithmetic with support for fixed point operations
+- local variables
 - structured assembly: if / else / endif, range loops, while loops - and _everything can be nested_
 - functions with input and output values
 - inline assembly because it _IS_ assembly
 
+\* _Disclaimer: I would never use any Forth on earth for any project. Please don't think rpn68k is some sudokuish gizmo since it's not, read on_
 
 ## What can rpn68k do for YOU?
 
@@ -86,15 +87,14 @@ sqrt_table:
 
 ## How to get started with rpn68k
 
-Currently:
+- Read the [documentation](https://github.com/el-visio/rpn68k/wiki) - _work in progress but hey, it's a start_
 - Build the [unit tests](https://github.com/el-visio/rpn68k/blob/master/unit_test.s?ts=2) then disassemble
 - Check out [the UNFINISHED demo project in WIP branch](https://github.com/el-visio/rpn68k/blob/wip-donut-demo/donut_demo.s?ts=2) (Amiga OCS!)
-- Educate yourself about [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation). Note: While the classic RPN style can be used you'll get the maximum performance with a few rpn68k specific optimization tricks - THEN _you're playing with power!_ 
+- Educate yourself about [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation). 
+  - Note: While the classic RPN style can be used you'll get the maximum performance with a few rpn68k specific optimization tricks - THEN _you're playing with power!_ 
 
 In _very near_ future: 
-- Read the documentation 
 - Check out the FINISHED demo project
-
 
 
 ### Happy hacking!
