@@ -4,176 +4,170 @@
 ;
 ;
 
+;	If branch after tst or btst asm command
+
 if_ macro
-	LS_PUSH_LABEL
-	LS_JUMP beq,(_0&LS_MASK_LABEL)
+	LS_JUMP_FWD beq
 	endm
+
+
+;	If branch after tst or btst asm command
 
 if_not macro
-	LS_PUSH_LABEL
-	LS_JUMP bne,(_0&LS_MASK_LABEL)
+	LS_JUMP_FWD bne
 	endm
+
 
 if_null macro
-	IFC \0,L
-		IFNB \1
-			ldc.L \1
-		ELSE
-			LS_CACHE.L
-			tst.L d0
-		ENDIF
-		drop
-		if_not
-	ELSE
-		IFNB \1
+	LS_FLAGS.\0 if_null,\1,\2
+
+	IF LS_FLAGS_if_null&LS_FLAGS_HAS_ARG
+		IF LS_FLAGS_if_null&LS_FLAGS_W
 			ldc \1
 		ELSE
+			ldc.l \1
+		ENDC
+	ELSE
+		IF LS_FLAGS_if_null&LS_FLAGS_W
 			LS_CACHE
 			tst d0
-		ENDIF
-		drop
-		if_not
+		ELSE
+			LS_CACHE.l
+			tst.l d0
+		ENDC	
 	ENDC
 
+	drop
+	if_not
+
 	endm
+
 
 if_not_null macro
-	IFC \0,L
-		IFNB \1
-			ldc.L \1
-		ELSE
-			LS_CACHE.L
-			tst.L d0
-		ENDIF
-		drop
-		if_
-	ELSE
-		IFNB \1
+	LS_FLAGS.\0 if_null,\1,\2
+
+	IF LS_FLAGS_if_null&LS_FLAGS_HAS_ARG
+		IF LS_FLAGS_if_null&LS_FLAGS_W
 			ldc \1
 		ELSE
+			ldc.l \1
+		ENDC
+	ELSE
+		IF LS_FLAGS_if_null&LS_FLAGS_W
 			LS_CACHE
 			tst d0
-		ENDIF
-		drop
-		if_
+		ELSE
+			LS_CACHE.l
+			tst.l d0
+		ENDC	
 	ENDC
+
+	drop
+	if_
 
 	endm
 
 
+LS_IF_BASE macro
+	LS_FLAGS.\0 if_base,\3,\4
 
-
-LS_IF_BASE_l macro			; 32-bit
-	; Two argument comparison:
-	; Load first one to stack, then recurse
-	IFNB \4
-		ldc.L \3
-		LS_IF_BASE_l \1,\2,\4
-	ELSE
-		LS_CACHE.L
-
-		IFNB \3
-			cmp.L \3,d0
-			LS_PUSH_LABEL
-			LS_JUMP \1,(_0&LS_MASK_LABEL)
-		ELSE 
-			cmp.L (a7)+,d0
-			LS_SET LOCAL,LOCAL-4
-			LS_PUSH_LABEL
-			LS_JUMP \2,(_0&LS_MASK_LABEL)
+	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG2
+		IF LS_FLAGS_if_base&LS_FLAGS_W
+			ldc \3
+			cmp \4,d0
+		ELSE
+			ldc.l \3
+			cmp.l \4,d0
 		ENDC
-		drop
-	ENDC
-
-	endm
-
-LS_IF_BASE_w macro			; 16-bit
-	; Two argument comparison:
-	; Load first one to stack, then recurse
-	IFNB \4
-		ldc \3
-		LS_IF_BASE_w \1,\2,\4
+		LS_JUMP_FWD \1
 	ELSE
-		LS_CACHE
-
-		IFNB \3
+	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG
+		IF LS_FLAGS_if_base&LS_FLAGS_W
+			LS_CACHE
 			cmp \3,d0
-			LS_PUSH_LABEL
-			LS_JUMP \1,(_0&LS_MASK_LABEL)
-		ELSE 
+		ELSE
+			LS_CACHE.l
+			cmp.l \3,d0
+		ENDC
+		LS_JUMP_FWD \1
+	ELSE 
+		LS_CACHE if_base
+		IF LS_FLAGS_if_base&LS_FLAGS_W
 			cmp (a7)+,d0
-			LS_SET LOCAL,LOCAL-2
-			LS_PUSH_LABEL
-			LS_JUMP \2,(_0&LS_MASK_LABEL)
+		ELSE
+			cmp.l (a7)+,d0
 		ENDC
-		drop
+		LS_SET LOCAL,LOCAL-(LS_FLAGS_if_base&LS_FLAGS_SIZE_MASK)
+		LS_JUMP_FWD \2
 	ENDC
+	ENDC
+	drop
 
 	endm
 
 
-LS_IF_BASE macro			; select macro by op size
-	IFC \0,L
-		LS_IF_BASE_l \1,\2,\3,\4
-	ELSE
-		LS_IF_BASE_w \1,\2,\3,\4
-	ENDC
-	endm
-	
 
+LS_AND_IF_BASE macro
+	LS_FLAGS.\0 if_base,\3,\4
 
-
-LS_AND_IF_BASE_l macro
-	IFNB \4
-		ldc.L \3
-		LS_AND_IF_BASE_l \1,\2,\4
-	ELSE
-		LS_CACHE.L
-
-		IFNB \3
-			cmp.L \3,d0
-			LS_JUMP \1,(_0&LS_MASK_LABEL)
-		ELSE 
-			cmp.L (a7)+,d0
-			LS_SET LOCAL,LOCAL-4
-			LS_JUMP \2,(_0&LS_MASK_LABEL)
+	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG2
+		IF LS_FLAGS_if_base&LS_FLAGS_W
+			ldc \3
+			cmp \4,d0
+		ELSE
+			ldc.l \3
+			cmp.l \4,d0
 		ENDC
-		drop
-	ENDC
-
-	endm
-
-
-LS_AND_IF_BASE_w macro
-	IFNB \4
-		ldc \3
-		LS_AND_IF_BASE_w \1,\2,\4
+		LS_JUMP_FWD_AND \1
 	ELSE
-		LS_CACHE
-
-		IFNB \3
+	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG
+		IF LS_FLAGS_if_base&LS_FLAGS_W
+			LS_CACHE
 			cmp \3,d0
-			LS_JUMP \1,(_0&LS_MASK_LABEL)
-		ELSE 
-			cmp (a7)+,d0
-			LS_SET LOCAL,LOCAL-2
-			LS_JUMP \2,(_0&LS_MASK_LABEL)
+		ELSE
+			LS_CACHE.l
+			cmp.l \3,d0
 		ENDC
-		drop
+		LS_JUMP_FWD_AND \1
+	ELSE 
+		IF LS_FLAGS_if_base&LS_FLAGS_W
+			LS_CACHE
+			cmp (a7)+,d0
+		ELSE
+			LS_CACHE.l
+			cmp.l (a7)+,d0
+		ENDC
+		LS_SET LOCAL,LOCAL-(LS_FLAGS_if_base&LS_FLAGS_SIZE_MASK)
+		LS_JUMP_FWD_AND \2
 	ENDC
+	ENDC
+	drop
 
 	endm
 
 
+el_se macro
+	LS_SET LS_CACHED,0		; TODO check flag
+	LS_JUMP_FWD bra
 
-LS_AND_IF_BASE macro			; select macro by op size
-	IFC \0,L
-		LS_AND_IF_BASE_l \1,\2,\3,\4
-	ELSE
-		LS_AND_IF_BASE_w \1,\2,\3,\4
-	ENDC
+	LS_SWAP_CS_ONE_MANY
+
+	LS_SET LOCAL,((_0>>LSCS_LOCAL_SHIFT)&LSCS_LOCAL_MASK)
+	REPT ((_0>>LSCS_AND_IF_SHIFT)&LSCS_AND_IF_MASK)+1
+		LS_LABEL_FWD _0
+		LS_DROP_CS
+	ENDR
+
 	endm
 
+
+end_if macro
+	REPT ((_0>>LSCS_AND_IF_SHIFT)&LSCS_AND_IF_MASK)+1
+		LS_LABEL_FWD _0
+		LS_DROP_CS
+	ENDR
+
+	endm
 
 
 if_eq macro
@@ -254,25 +248,4 @@ and_if_ulo macro
 
 and_if_uls macro
 	LS_AND_IF_BASE.\0 bhi,bcs,\1,\2
-	endm
-
-
-
-end_if macro
-	LS_LABEL (_0&LS_MASK_LABEL)
-	LS_DROP_CS
-	endm
-
-el_se macro
-	LS_PUSH_CS LS_LABEL_NUM|(LOCAL<<LS_SHIFT_LOCAL)
-	LS_INC LS_LABEL_NUM
-	LS_SET LS_CACHED,0
-	LS_JUMP bra,(_0&LS_MASK_LABEL)
-
-	LS_SWAP_CS
-
-	LS_LABEL (_0&LS_MASK_LABEL)
-	LS_SET LOCAL,(_0>>LS_SHIFT_LOCAL)
-	LS_DROP_CS
-
 	endm

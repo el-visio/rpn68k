@@ -44,31 +44,49 @@ LS_MASK_LABEL equ ((1<<LS_SHIFT_LOCAL)-1)
 
 	endm
 
+;	LS_FLUSH - Flush top of stack
+;
+;	If d0 has cached top of stack, move it to the actual stack
+;	in the memory
+
 LS_FLUSH macro
 	IF LS_CACHED=2
 		move.w d0,-(a7)
-		LS_SET LS_CACHED,0
-		LS_SET LOCAL,LOCAL+2
 	ELSE
 	IF LS_CACHED=4
 		move.l d0,-(a7)
-		LS_SET LS_CACHED,0
-		LS_SET LOCAL,LOCAL+4
 	ENDC
 	ENDC
+
+	LS_SET LOCAL,LOCAL+LS_CACHED
+	LS_SET LS_CACHED,0
 	endm
+
+
+;	LS_CACHE - Cache top of stack
+;
+;	If the cache is currently empty, move the top of stack to d0
 
 LS_CACHE macro
 	IF LS_CACHED=0
-		IFC \0,L
-			move.l (a7)+,d0
-			LS_SET LS_CACHED,4
-			LS_SET LOCAL,LOCAL-4
-		ELSE
-			move.w (a7)+,d0
-			LS_SET LS_CACHED,2
-			LS_SET LOCAL,LOCAL-2
+		LS_FLAGS.\0 cache,\1
+
+		; If called with an argument (the name of the calling macro),
+		; use those flags to determine op size
+
+		IF LS_FLAGS_cache&LS_FLAGS_HAS_ARG
+			LS_SET LS_FLAGS_cache,LS_FLAGS_\1
 		ENDC
+
+		IF LS_FLAGS_cache&LS_FLAGS_L ; 32-bit
+			move.l (a7)+,d0
+		ELSE												 ; 16-bit
+			move.w (a7)+,d0
+		ENDC
+
+		LS_SET LS_CACHED,LS_FLAGS_cache&LS_FLAGS_SIZE_MASK
+		LS_SET LOCAL,LOCAL-(LS_FLAGS_cache&LS_FLAGS_SIZE_MASK)
+
 	ENDC
 	endm
 
@@ -92,53 +110,6 @@ LS_ARG macro
 	ENDC
 	endm
 
-
-LS_FLAGS_SIZE_MASK		equ	7
-LS_FLAGS_HAS_ARG 			equ	(1<<3)
-LS_FLAGS_HAS_ARG2			equ	(1<<4)
-LS_FLAGS_B 						equ	(1<<5)
-LS_FLAGS_W 						equ	(1<<6)
-LS_FLAGS_L 						equ	(1<<7)
-LS_FLAGS_CACHE_SHIFT 	equ	8
-LS_FLAGS_CACHE_MASK 	equ	(7<<LS_FLAGS_CACHE_SHIFT)
-LS_FLAGS_SPLIT_ARG		equ (1<<11)
-
-
-LS_FLAGS_1 macro
-;	Set flags for command - op size
-;
-;	\1 Command name
-;	\2 Command size (= \0 from the original command)
-
-	IFC \2,L
-		LS_SET LS_FLAGS_\1,(4|LS_FLAGS_L)
-	ELSE
-	IFC \2,B
-		LS_SET LS_FLAGS_\1,(1|LS_FLAGS_B)
-	ELSE
-		LS_SET LS_FLAGS_\1,(2|LS_FLAGS_W)
-	ENDC
-	ENDC
-
-	endm
-
-LS_FLAGS_2 macro
-;	Set flags for command - arguments
-;
-;	\1 Command name
-;	\2 Command arg 1 (= \1 from the original command)
-;	\3 Command arg 2 (= \2 from the original command)
-
-	IFNB \2
-		LS_SET LS_FLAGS_\1,(LS_FLAGS_\1|LS_FLAGS_HAS_ARG)
-	ENDC
-
-	IFNB \3
-		LS_SET LS_FLAGS_\1,(LS_FLAGS_\1|LS_FLAGS_HAS_ARG2)
-	ENDC
-	endm
-
-
 	
 alloc macro
 	IFNB \2
@@ -153,48 +124,120 @@ alloc macro
 	endm
 
 LS_PUSH_CS macro
-_f  SET         _e
-_e  SET         _d
-_d  SET         _c
-_c  SET         _b
-_b  SET         _a
-_a  SET         _9
-_9  SET         _8
-_8  SET         _7
-_7  SET         _6
-_6  SET         _5
-_5  SET         _4
-_4  SET         _3
-_3  SET         _2
-_2  SET         _1
-_1  SET         _0
-_0  SET         \1
-		endm
+_f SET  _e
+_e SET _d
+_d SET _c
+_c SET _b
+_b SET _a
+_a SET _9
+_9 SET _8
+_8 SET _7
+_7 SET _6
+_6 SET _5
+_5 SET _4
+_4 SET _3
+_3 SET _2
+_2 SET _1
+_1 SET _0
+_0 SET \1
+	endm
 
 LS_DROP_CS macro
-_0  SET         _1
-_1  SET         _2
-_2  SET         _3
-_3  SET         _4
-_4  SET         _5
-_5  SET         _6
-_6  SET         _7
-_7  SET         _8
-_8  SET         _9
-_9  SET         _a
-_a  SET         _b
-_b  SET         _c
-_c  SET         _d
-_d  SET         _e
-_e  SET         _f
-_f  SET         0
-		endm
+_0 SET _1
+_1 SET _2
+_2 SET _3
+_3 SET _4
+_4 SET _5
+_5 SET _6
+_6 SET _7
+_7 SET _8
+_8 SET _9
+_9 SET _a
+_a SET _b
+_b SET _c
+_c SET _d
+_d SET _e
+_e SET _f
+_f SET 0
+	endm
 
-LS_SWAP_CS macro
+
+; swap <one> <many> -> <many> <one>
+
+LS_SWAP_CS_ONE_MANY macro
+	LS_SET LS_TEMP,(_1>>LSCS_AND_IF_SHIFT)&LSCS_AND_IF_MASK
+	LS_SET LS_TEMP_TOP,_0
+
+	IF LS_TEMP=0
 LS_SWAP_TMP set _0
 _0 set _1
 _1 set LS_SWAP_TMP
-		endm
+	ENDC
+
+	IF LS_TEMP=1
+LS_SWAP_TMP set _0
+_0 set _1
+_1 set _2
+_2 set LS_SWAP_TMP
+	ENDC
+
+	IF LS_TEMP=2
+LS_SWAP_TMP set _0
+_0 set _1
+_1 set _2
+_2 set _3
+_3 set LS_SWAP_TMP
+	ENDC
+
+	IF LS_TEMP=3
+LS_SWAP_TMP set _0
+_0 set _1
+_1 set _2
+_2 set _3
+_3 set _4
+_4 set LS_SWAP_TMP
+	ENDC
+
+	endm
+
+
+; swap <many> <one> -> <one> <many>
+
+LS_SWAP_CS_MANY_ONE macro
+	LS_SET LS_TEMP,(_0>>LSCS_AND_IF_SHIFT)&LSCS_AND_IF_MASK
+
+	IF LS_TEMP=0
+LS_SWAP_TMP set _1
+_1 set _0
+_0 set LS_SWAP_TMP
+	ENDC
+
+	IF LS_TEMP=1
+LS_SWAP_TMP set _2
+_2 set _1
+_1 set _0
+_0 set LS_SWAP_TMP
+	ENDC
+
+	IF LS_TEMP=2
+LS_SWAP_TMP set _3
+_3 set _2
+_2 set _1
+_1 set _0
+_0 set LS_SWAP_TMP
+	ENDC
+
+	IF LS_TEMP=3
+LS_SWAP_TMP set _4
+_4 set _3
+_3 set _2
+_2 set _1
+_1 set _0
+_0 set LS_SWAP_TMP
+	ENDC
+
+	endm
+
 
 push macro
 	ld.\0 \1
@@ -204,41 +247,58 @@ pop macro
 	sto.\0 \1
 	endm
 
+
+;	ld
+;
+;	load value to stack
+
 ld macro
-	IFC \0,L
-		LS_FLUSH
-		move.l \1,-(a7)
-		LS_SET LOCAL,LOCAL+4
+	LS_FLAGS.\0 ld,\1,\2,\3
+
+	LS_FLUSH	; Flush cached value if any
+
+	IF LS_FLAGS_ld&LS_FLAGS_W
+		move.w \1,-(a7)					; 16-bit
 	ELSE
-		LS_FLUSH
-		move.w \1,-(a7)
-		LS_SET LOCAL,LOCAL+2
+		move.l \1,-(a7)					; 32-bit
 	ENDC
 
-	IFNB \2
+	LS_SET LOCAL,LOCAL+(LS_FLAGS_ld&LS_FLAGS_SIZE_MASK)
+
+	IF LS_FLAGS_ld&LS_FLAGS_HAS_ARG2
 		var \2
 	ENDC
 
 	endm
 
+
+;	ldc 
+;
+;	load value to cache
+
 ldc macro
-	IFC \0,L
-		LS_FLUSH
-		move.l \1,d0
-		LS_SET LS_CACHED,4
+	LS_FLAGS.\0 ldc,\1,\2,\3
+
+	LS_FLUSH
+
+	IF LS_FLAGS_ldc&LS_FLAGS_W
+		move.w \1,d0							; 16-bit
 	ELSE
-	IFC \0,B
-		LS_FLUSH
-		move.b \1,d0
+	IF LS_FLAGS_ldc&LS_FLAGS_L
+		move.l \1,d0							; 32-bit
+	ELSE
+		move.b \1,d0							; 8-bit
 		ext.w d0
-		LS_SET LS_CACHED,2
-	ELSE
-		LS_FLUSH
-		move.w \1,d0
-		LS_SET LS_CACHED,2
+		; Force cache size to 2
+		LS_FLAGS_B2W ldc
 	ENDC
 	ENDC
+
+	LS_SET LS_CACHED,LS_FLAGS_ldc&LS_FLAGS_SIZE_MASK
 	endm
+
+
+;	Load address to stack
 
 ld_addr macro
 	LS_FLUSH
@@ -246,47 +306,60 @@ ld_addr macro
 	LS_SET LOCAL,LOCAL+4
 	endm
 
+
+;	Store top of stack to location
+
 sto macro
-	IF LS_CACHED=4
-		move.l d0,\1
-		LS_SET LS_CACHED,0
-	ELSE
+	LS_FLAGS.\0 sto,\1,\2
+
 	IF LS_CACHED=2
-		IFC \0,B
-			move.b d0,\1        ; todo non-cached byte
-			LS_SET LS_CACHED,0
-		ELSE
+		IF LS_FLAGS_sto&LS_FLAGS_W
 			move.w d0,\1
-			LS_SET LS_CACHED,0
+		ELSE
+			move.b d0,\1
 		ENDC
 	ELSE
-	IFC \0,L
-		LS_SET LOCAL,LOCAL-4
-		move.l (a7)+,\1
+	IF LS_CACHED=4
+		move.l d0,\1
 	ELSE
-		LS_SET LOCAL,LOCAL-2
-		move.w (a7)+,\1
+		IF LS_FLAGS_sto&LS_FLAGS_W
+			LS_SET LOCAL,LOCAL-2
+			move.w (a7)+,\1						; 16-bit
+		ELSE
+		IF LS_FLAGS_sto&LS_FLAGS_L
+			LS_SET LOCAL,LOCAL-4
+			move.l (a7)+,\1						; 32-bit
+		ELSE
+			LS_SET LOCAL,LOCAL-2
+			move.b (a7)+,\1						; 8 bit
+		ENDC
+		ENDC
 	ENDC
 	ENDC
-	ENDC
+
+	LS_SET LS_CACHED,0
+
 	endm
 
+
+;	drop 
+;
 ;	Drop top of stack
 ;	(please use other methods for this where possible)
+
 drop macro
+	LS_FLAGS.\0 drop
+
 	IF LS_CACHED>0
 		LS_SET LS_CACHED,0
 	ELSE
-	IFC \0,L
-		addq #4,a7
-		LS_SET LOCAL,LOCAL-4
-	ELSE
-		addq #2,a7
-		LS_SET LOCAL,LOCAL-2
-	ENDC
+		addq #LS_FLAGS_drop&LS_FLAGS_SIZE_MASK,a7
+		LS_SET LOCAL,LOCAL-(LS_FLAGS_drop&LS_FLAGS_SIZE_MASK)
 	ENDC
 	endm
 
+
+;	Reset stack	(do this before you RTS)
 
 RESET_STACK macro
 	lea LOCAL(a7),a7
@@ -294,43 +367,52 @@ RESET_STACK macro
 	endm
 
 
+;	dup
+;
+;	Duplicate top of stack.
+
 dup macro
+	LS_FLAGS.\0 dup
+
 	IF LS_CACHED=0
-		IFC \0,l
-			move.l (a7),d0
-			LS_SET LS_CACHED,4
-		ELSE
+		IF LS_FLAGS_dup&LS_FLAGS_W
 			move.w (a7),d0
-			LS_SET LS_CACHED,2
+		ELSE
+			move.l (a7),d0
 		ENDC
+		LS_SET LS_CACHED,LS_FLAGS_dup&LS_FLAGS_SIZE_MASK
 	ELSE
-	IF LS_CACHED=4
-		move.l d0,-(a7)
-		LS_SET LOCAL,LOCAL+4
-	ELSE
-		move.w d0,-(a7)
-		LS_SET LOCAL,LOCAL+2
-	ENDC
+		IF LS_CACHED=4
+			move.l d0,-(a7)
+		ELSE
+			move.w d0,-(a7)
+		ENDC
+		LS_SET LOCAL,LOCAL+LS_CACHED
 	ENDC
 	endm
 
-; Restore cache value
-; If used with argument it will be stored again
+
+;	restore
+;
+;	Restore previously cached value
+; 	If used with argument it will be stored again in the
+;	desired location
 
 restore macro
-	IFC \0,L
-		LS_SET LS_CACHED,4
-		IFNB \1
-			sto.l \1
-		ENDIF
-	ELSE
-		LS_SET LS_CACHED,2
-		IFNB \1
+	LS_FLAGS.\0 restore,\1,\2
+
+	LS_SET LS_CACHED,LS_FLAGS_restore&LS_FLAGS_SIZE_MASK
+
+	IF LS_FLAGS_restore&LS_FLAGS_HAS_ARG
+		IF LS_FLAGS_restore&LS_FLAGS_W
 			sto \1
-		ENDIF
+		ELSE
+			sto.l \1
+		ENDC
 	ENDC
 
 	endm
+
 
 LS_ARRAY_LEN macro
 ;	Helper macro to calculate array length
@@ -342,7 +424,9 @@ LS_ARRAY_LEN macro
 \1 equ (*-\2)/(\3)
 	endm
 
+
 ;	Get pointer to string
+
 string macro
 	ld_addr .string\@(pc)
 	bra .next\@

@@ -60,21 +60,19 @@ COMPARE_RESULT macro
 		LS_CACHE.l
 		drop
 		cmp.l \1,d0
-		bne test_failed_exit
 
 	ELSE
 		LS_CACHE
-;		and.l #$ffff,d0					; mask higher word
+		and.l #$ffff,d0					; mask higher word
 		drop
 		cmp.w \1,d0
-		bne test_failed_exit
 
 	ENDC
+	beq.b *+8 
+	jmp test_failed_exit
 
 	IF LOCAL<>0
-		printt 'ERROR: Stack size is not zero!'
-		moveq #-1,d0
-		rts
+		printt 'Stack size is not zero!'
 	ENDC
 
 	addq #1,d7              ; update test index
@@ -82,8 +80,9 @@ COMPARE_RESULT macro
 	endm
 
 
-; 	For mul.l tests, 2x int16 source values -> int32 result
-ARITHMETIC_TEST_wwl macro
+; 	Tests for pattern int16, int16 -> int32
+
+ARITHMETIC_TEST_WWL macro
 
 	TEST_CASE 
 	ld \1
@@ -110,128 +109,134 @@ ARITHMETIC_TEST_wwl macro
 	endm
 
 
-ARITHMETIC_TEST_BASE macro
-	LS_FLAGS_1 atbase,\0
-	IF LS_FLAGS_atbase&LS_FLAGS_L
+; 	Tests for pattern int32, int16 -> int16
 
-		TEST_CASE 
-		ld.l \1
-		ld.l \2
-		\3.l
-		COMPARE_RESULT.l \4
+ARITHMETIC_TEST_LWW macro
 
-		TEST_CASE 
-		ld.l \1
-		ldc.l \2
-		\3.l
-		COMPARE_RESULT.l \4
+	TEST_CASE 
+	ld.l \1
+	ld \2
+	\3.l
+	COMPARE_RESULT \4
 
-		TEST_CASE 
-		ld.l \1
-		\3.l \2
-		COMPARE_RESULT.l \4
+	TEST_CASE 
+	ld.l \1
+	ldc \2
+	\3.l
+	COMPARE_RESULT \4
 
-		TEST_CASE 
-		ldc.l \1
-		\3.l \2
-		COMPARE_RESULT.l \4
+	TEST_CASE 
+	ld.l \1
+	\3.l \2
+	COMPARE_RESULT \4
 
-	ELSE
-
-		TEST_CASE 
-		ld \1
-		ld \2
-		\3
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ld \1
-		ldc \2
-		\3
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ld \1
-		\3 \2
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ldc \1
-		\3 \2
-		COMPARE_RESULT \4
-
-	ENDC
+	TEST_CASE 
+	ldc.l \1
+	\3.l \2
+	COMPARE_RESULT \4
 
 	endm
 
+
+; 	Tests for pattern int32, int16 -> int32
+
+ARITHMETIC_TEST_LWL macro
+
+	TEST_CASE 
+	ld.L \1
+	ld \2
+	\3.L
+	COMPARE_RESULT.L \4
+
+	TEST_CASE 
+	ld.L \1
+	ldc \2
+	\3.L
+	COMPARE_RESULT.L \4
+
+	TEST_CASE 
+	ld.L \1
+	\3.L \2
+	COMPARE_RESULT.L \4
+
+	TEST_CASE 
+	ldc.L \1
+	\3.L \2
+	COMPARE_RESULT.L \4
+
+	endm
+
+
+; 	Tests for pattern int16, int16 -> int16
+
+ARITHMETIC_TEST_WWW macro
+	TEST_CASE 
+	ld \1
+	ld \2
+	\3
+	COMPARE_RESULT \4
+
+	TEST_CASE 
+	ld \1
+	ldc \2
+	\3
+	COMPARE_RESULT \4
+
+	TEST_CASE 
+	ld \1
+	\3 \2
+	COMPARE_RESULT \4
+
+	TEST_CASE 
+	ldc \1
+	\3 \2
+	COMPARE_RESULT \4
+	endm
+
+
+; 	Tests for pattern int32, int32 -> int32
+
+ARITHMETIC_TEST_LLL macro
+	TEST_CASE 
+	ld.l \1
+	ld.l \2
+	\3.l
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ld.l \1
+	ldc.l \2
+	\3.l
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ld.l \1
+	\3.l \2
+	COMPARE_RESULT.l \4
+
+	TEST_CASE 
+	ldc.l \1
+	\3.l \2
+	COMPARE_RESULT.l \4
+	endm
+	
 
 ARITHMETIC_TEST macro
-	ARITHMETIC_TEST_BASE \1,\2,\3,\4
-	ARITHMETIC_TEST_BASE.l \1,\2,\3,\4
-	endm
-
-
-ROT_TEST_BASE macro
-	IFC \0,L
-
-		TEST_CASE 
-		ld.L \1
-		ld \2
-		\3.L
-		COMPARE_RESULT.L \4
-
-		TEST_CASE 
-		ld.L \1
-		ldc \2
-		\3.L
-		COMPARE_RESULT.L \4
-
-		TEST_CASE 
-		ld.L \1
-		\3.L \2
-		COMPARE_RESULT.L \4
-
-		TEST_CASE 
-		ldc.L \1
-		\3.L \2
-		COMPARE_RESULT.L \4
-
-	ELSE
-
-		TEST_CASE 
-		ld \1
-		ld \2
-		\3
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ld \1
-		ldc \2
-		\3
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ld \1
-		\3 \2
-		COMPARE_RESULT \4
-
-		TEST_CASE 
-		ldc \1
-		\3 \2
-		COMPARE_RESULT \4
-	ENDIF
-
+	ARITHMETIC_TEST_WWW \1,\2,\3,\4
+	ARITHMETIC_TEST_LLL \1,\2,\3,\4
 	endm
 
 
 ROT_TEST macro
-	ROT_TEST_BASE.w \1,\2,\3,\4
-	ROT_TEST_BASE.l \1,\2,\3,\4
+	ARITHMETIC_TEST_WWW \1,\2,\3,\4
+	ARITHMETIC_TEST_LWL \1,\2,\3,\4
 	endm
 
 
 IF_TEST_BASE_l macro			; 32-bit tests
-										; If between two values in stack
+
+; If between two values in stack
+
 	TEST_CASE
 
 	ld.L \1
@@ -245,6 +250,7 @@ IF_TEST_BASE_l macro			; 32-bit tests
 
 
 ; If between two values in stack, TOS cached
+
 	TEST_CASE
 
 	ld.L \1
@@ -258,6 +264,7 @@ IF_TEST_BASE_l macro			; 32-bit tests
 
 
 ; If between single arg and uncached TOS
+
 	TEST_CASE
 
 	ld.L \1
@@ -270,6 +277,7 @@ IF_TEST_BASE_l macro			; 32-bit tests
 
 
 ; If between single arg and cached TOS
+
 	TEST_CASE
 
 	ldc.L \1
@@ -282,6 +290,7 @@ IF_TEST_BASE_l macro			; 32-bit tests
 
 
 ; If between two args
+
 	TEST_CASE
 
 	\3.L \1,\2
@@ -295,7 +304,9 @@ IF_TEST_BASE_l macro			; 32-bit tests
 
 
 IF_TEST_BASE_w macro			; 16-bit tests
+
 ; If between two values in stack
+
 	TEST_CASE
 
 	ld \1
@@ -309,6 +320,7 @@ IF_TEST_BASE_w macro			; 16-bit tests
 
 
 ; If between two values in stack, TOS cached
+
 	TEST_CASE
 
 	ld \1
@@ -322,6 +334,7 @@ IF_TEST_BASE_w macro			; 16-bit tests
 
 
 ; If between single arg and uncached TOS
+
 	TEST_CASE
 
 	ld \1
@@ -334,6 +347,7 @@ IF_TEST_BASE_w macro			; 16-bit tests
 
 
 ; If between single arg and cached TOS
+
 	TEST_CASE
 
 	ldc \1
@@ -346,6 +360,7 @@ IF_TEST_BASE_w macro			; 16-bit tests
 
 
 ; If between two args
+
 	TEST_CASE
 
 	\3 \1,\2
@@ -397,3 +412,4 @@ COMPARE_DEMO_LIST macro
 																		; to array size
 
 	endm
+

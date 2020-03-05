@@ -24,6 +24,8 @@
 ENABLE_TEST_ARITHMETIC	equ 1	; Enable tests for arithmetic commands
 ENABLE_TEST_LOOPS				equ 1	; Enable tests for loops
 ENABLE_TEST_IF					equ 1	; Enable tests for if commands
+ENABLE_TEST_AND_IF			equ 1	; Enable tests for and if commands
+ENABLE_TEST_WHILE				equ 1	; Enable tests for while commands
 ENABLE_TEST_ALLOC				equ 1	; Enable tests for memory allocation
 ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
 
@@ -77,13 +79,13 @@ unit_test_arithmetic
 	ARITHMETIC_TEST #-10,#20,add_,#10
 	ARITHMETIC_TEST #-10,#-20,add_,#-30
 
-	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p20(a6),add_,#30
-	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_p20(a6),add_,#10
-	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),add_,#-30
+	ARITHMETIC_TEST_WWW UT_p10(a6),UT_p20(a6),add_,#30
+	ARITHMETIC_TEST_WWW UT_m10(a6),UT_p20(a6),add_,#10
+	ARITHMETIC_TEST_WWW UT_m10(a6),UT_m20(a6),add_,#-30
 
-	ARITHMETIC_TEST_BASE.l UT_p10l(a6),UT_p20l(a6),add_,#30
-	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_p20l(a6),add_,#10
-	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),add_,#-30
+	ARITHMETIC_TEST_LLL UT_p10l(a6),UT_p20l(a6),add_,#30
+	ARITHMETIC_TEST_LLL UT_m10l(a6),UT_p20l(a6),add_,#10
+	ARITHMETIC_TEST_LLL UT_m10l(a6),UT_m20l(a6),add_,#-30
 
 
 	TEST_NAME 'sub_'
@@ -92,99 +94,135 @@ unit_test_arithmetic
 	ARITHMETIC_TEST #10,#30,sub_,#-20
 	ARITHMETIC_TEST #-10,#-20,sub_,#10
 
-	ARITHMETIC_TEST_BASE.w UT_p30(a6),UT_p20(a6),sub_,#10
-	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p30(a6),sub_,#-20
-	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),sub_,#10
+	ARITHMETIC_TEST_WWW UT_p30(a6),UT_p20(a6),sub_,#10
+	ARITHMETIC_TEST_WWW UT_p10(a6),UT_p30(a6),sub_,#-20
+	ARITHMETIC_TEST_WWW UT_m10(a6),UT_m20(a6),sub_,#10
 
-	ARITHMETIC_TEST_BASE.l UT_p30l(a6),UT_p20l(a6),sub_,#10
-	ARITHMETIC_TEST_BASE.l UT_p10l(a6),UT_p30l(a6),sub_,#-20
-	ARITHMETIC_TEST_BASE.l UT_m10l(a6),UT_m20l(a6),sub_,#10
+	ARITHMETIC_TEST_LLL UT_p30l(a6),UT_p20l(a6),sub_,#10
+	ARITHMETIC_TEST_LLL UT_p10l(a6),UT_p30l(a6),sub_,#-20
+	ARITHMETIC_TEST_LLL UT_m10l(a6),UT_m20l(a6),sub_,#10
+
 
 
 	TEST_NAME 'mul'
 
-	ARITHMETIC_TEST_BASE.w #10,#20,mul,#200
-	ARITHMETIC_TEST_BASE.w #10,#-20,mul,#-200
-	ARITHMETIC_TEST_BASE.w #-10,#-20,mul,#200
+	ARITHMETIC_TEST_WWW #10,#20,mul,#200
+	ARITHMETIC_TEST_WWW #10,#-20,mul,#-200
+	ARITHMETIC_TEST_WWW #-10,#-20,mul,#200
 
-	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_p20(a6),mul,#200
-	ARITHMETIC_TEST_BASE.w UT_p10(a6),UT_m20(a6),mul,#-200
-	ARITHMETIC_TEST_BASE.w UT_m10(a6),UT_m20(a6),mul,#200
+	ARITHMETIC_TEST_WWW UT_p10(a6),UT_p20(a6),mul,#200
+	ARITHMETIC_TEST_WWW UT_p10(a6),UT_m20(a6),mul,#-200
+	ARITHMETIC_TEST_WWW UT_m10(a6),UT_m20(a6),mul,#200
 
-	ARITHMETIC_TEST_wwl #$1000,#$2000,mul,#$02000000
-	ARITHMETIC_TEST_wwl #$1000,#-$2000,mul,#$fe000000
+	ARITHMETIC_TEST_WWL #$1000,#$2000,mul,#$02000000
+	ARITHMETIC_TEST_WWL #$1000,#-$2000,mul,#$fe000000
 
 
 	TEST_NAME 'mul12f'
 
-	ARITHMETIC_TEST_BASE.w #$200,#1<<11,mul12f,#$100
-	ARITHMETIC_TEST_BASE.w #$200,#1<<13,mul12f,#$400
+	ARITHMETIC_TEST_WWW #$200,#1<<11,mul12f,#$100
+	ARITHMETIC_TEST_WWW #$200,#1<<13,mul12f,#$400
 
-	ARITHMETIC_TEST_wwl #$7000,#$7000,mul12f,#$31000
+	ARITHMETIC_TEST_WWL #$7000,#$7000,mul12f,#$31000
 
 
 	TEST_NAME 'div'
 
-	ARITHMETIC_TEST_BASE.w #200,#10,div,#20
-	ARITHMETIC_TEST_BASE.w #200,#-10,div,#-20
-	ARITHMETIC_TEST_BASE.w #-200,#-10,div,#20
+	ARITHMETIC_TEST_WWW #200,#10,div,#20
+	ARITHMETIC_TEST_WWW #200,#-10,div,#-20
+	ARITHMETIC_TEST_WWW #-200,#-10,div,#20
+
+	ARITHMETIC_TEST_LWW #200,#10,div,#20
+	ARITHMETIC_TEST_LWW #200,#-10,div,#-20
+	ARITHMETIC_TEST_LWW #-200,#-10,div,#20
+
+
+	TEST_NAME 'div12f'
+
+	ARITHMETIC_TEST_WWW #$2000,#2<<12,div12f,#$1000		; / 2.0
+	ARITHMETIC_TEST_WWW #$2000,#1<<12,div12f,#$2000		; / 1.0
+	ARITHMETIC_TEST_WWW #$2000,#1<<11,div12f,#$4000		; / 0.5
+	
+	ARITHMETIC_TEST_WWW #-$2000,#2<<12,div12f,#-$1000		; / 2.0
+	ARITHMETIC_TEST_WWW #-$2000,#1<<12,div12f,#-$2000		; / 1.0
+	ARITHMETIC_TEST_WWW #-$2000,#1<<11,div12f,#-$4000		; / 0.5
+	
+	ARITHMETIC_TEST_LWW #$2000,#2<<12,div12f,#$1000		; / 2.0
+	ARITHMETIC_TEST_LWW #$2000,#1<<12,div12f,#$2000		; / 1.0
+	ARITHMETIC_TEST_LWW #$2000,#1<<11,div12f,#$4000		; / 0.5
+	
+	ARITHMETIC_TEST_LWW #-$2000,#2<<12,div12f,#-$1000		; / 2.0
+	ARITHMETIC_TEST_LWW #-$2000,#1<<12,div12f,#-$2000		; / 1.0
+	ARITHMETIC_TEST_LWW #-$2000,#1<<11,div12f,#-$4000		; / 0.5
 
 
 	TEST_NAME 'mod'
 
-	ARITHMETIC_TEST_BASE.w #15,#10,mod,#5
-	ARITHMETIC_TEST_BASE.w #15,#5,mod,#0
-	ARITHMETIC_TEST_BASE.w #30,#20,mod,#10
+	ARITHMETIC_TEST_WWW #15,#10,mod,#5
+	ARITHMETIC_TEST_WWW #15,#5,mod,#0
+	ARITHMETIC_TEST_WWW #30,#20,mod,#10
+
+	ARITHMETIC_TEST_WWW #-15,#10,mod,#-5
+	ARITHMETIC_TEST_WWW #-15,#5,mod,#0
+	ARITHMETIC_TEST_WWW #-30,#20,mod,#-10
+
+	ARITHMETIC_TEST_LWW #15,#10,mod,#5
+	ARITHMETIC_TEST_LWW #15,#5,mod,#0
+	ARITHMETIC_TEST_LWW #30,#20,mod,#10
+
+	ARITHMETIC_TEST_LWW #-15,#10,mod,#-5
+	ARITHMETIC_TEST_LWW #-15,#5,mod,#0
+	ARITHMETIC_TEST_LWW #-30,#20,mod,#-10
 
 
 	TEST_NAME 'and_'
 
 	ARITHMETIC_TEST #$ff00,#$f0f0,and_,#$f000
-	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),and_,#$f000
+	ARITHMETIC_TEST_WWW UT_0xff00(a6),UT_0xf0f0(a6),and_,#$f000
 
 
 	TEST_NAME 'or_'
 
 	ARITHMETIC_TEST #$ff00,#$f0f0,or_,#$fff0
-	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),or_,#$fff0
+	ARITHMETIC_TEST_WWW UT_0xff00(a6),UT_0xf0f0(a6),or_,#$fff0
 
 
 	TEST_NAME 'xor_'
 
 	ARITHMETIC_TEST #$ff00,#$f0f0,xor_,#$0ff0
-	ARITHMETIC_TEST_BASE.w UT_0xff00(a6),UT_0xf0f0(a6),xor_,#$0ff0
+	ARITHMETIC_TEST_WWW UT_0xff00(a6),UT_0xf0f0(a6),xor_,#$0ff0
 
 
 	TEST_NAME 'max'
 
-	ARITHMETIC_TEST_BASE.w #10,#20,max,#20
-	ARITHMETIC_TEST_BASE.w #-10,#20,max,#20
-	ARITHMETIC_TEST_BASE.w #20,#10,max,#20
-	ARITHMETIC_TEST_BASE.w #20,#-10,max,#20
+	ARITHMETIC_TEST #10,#20,max,#20
+	ARITHMETIC_TEST #-10,#20,max,#20
+	ARITHMETIC_TEST #20,#10,max,#20
+	ARITHMETIC_TEST #20,#-10,max,#20
 
 
 	TEST_NAME 'min'
 
-	ARITHMETIC_TEST_BASE.w #10,#20,min,#10
-	ARITHMETIC_TEST_BASE.w #-10,#20,min,#-10
-	ARITHMETIC_TEST_BASE.w #20,#10,min,#10
-	ARITHMETIC_TEST_BASE.w #20,#-10,min,#-10
+	ARITHMETIC_TEST #10,#20,min,#10
+	ARITHMETIC_TEST #-10,#20,min,#-10
+	ARITHMETIC_TEST #20,#10,min,#10
+	ARITHMETIC_TEST #20,#-10,min,#-10
 
 
 	TEST_NAME 'umax'
 
-	ARITHMETIC_TEST_BASE.w #10,#20,umax,#20
-	ARITHMETIC_TEST_BASE.w #$f000,#20,umax,#$f000
-	ARITHMETIC_TEST_BASE.w #20,#10,umax,#20
-	ARITHMETIC_TEST_BASE.w #20,#$f000,umax,#$f000
+	ARITHMETIC_TEST #10,#20,umax,#20
+	ARITHMETIC_TEST #-$1000,#20,umax,#-$1000
+	ARITHMETIC_TEST #20,#10,umax,#20
+	ARITHMETIC_TEST #20,#-$1000,umax,#-$1000
 
 
 	TEST_NAME 'umin'
 
-	ARITHMETIC_TEST_BASE.w #10,#20,umin,#10
-	ARITHMETIC_TEST_BASE.w #$f000,#20,umin,#20
-	ARITHMETIC_TEST_BASE.w #20,#10,umin,#10
-	ARITHMETIC_TEST_BASE.w #20,#$f000,umin,#20
+	ARITHMETIC_TEST #10,#20,umin,#10
+	ARITHMETIC_TEST #-$1000,#20,umin,#20
+	ARITHMETIC_TEST #20,#10,umin,#10
+	ARITHMETIC_TEST #20,#-$1000,umin,#20
 
 
 	TEST_NAME 'asr_'
@@ -201,14 +239,14 @@ unit_test_arithmetic
 
 	TEST_NAME 'ror_'
 
-	ROT_TEST_BASE.w #$1234,#4,ror_,#$4123
-	ROT_TEST_BASE.l #$12345678,#4,ror_,#$81234567
+	ARITHMETIC_TEST_WWW #$1234,#4,ror_,#$4123
+	ARITHMETIC_TEST_LWL #$12345678,#4,ror_,#$81234567
 
 
 	TEST_NAME 'rol_'
 
-	ROT_TEST_BASE.w #$1234,#4,rol_,#$2341
-	ROT_TEST_BASE.l #$12345678,#4,rol_,#$23456781
+	ARITHMETIC_TEST_WWW #$1234,#4,rol_,#$2341
+	ARITHMETIC_TEST_LWL #$12345678,#4,rol_,#$23456781
 
 
 	ENDC	; ENABLE_TEST_ARITHMETIC
@@ -224,7 +262,6 @@ unit_test_loops
 
 	TEST_NAME 'loop_in'
 
-
 	TEST_CASE			; loop value is arg
 
 	ld.l #0,loop_res1		; test result
@@ -234,7 +271,9 @@ unit_test_loops
 			loop_in #PRIME_3
 				inc.l loop_res1+LOCAL(a7)
 			loop_out
-		loop_out			
+			ldc.l #0			; dummy cached value, should be removed
+		loop_out
+		ld.l #0					; dummy value, should be removed
 	loop_out
 
 	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
@@ -252,7 +291,9 @@ unit_test_loops
 			loop_in
 				inc.l loop_res2+LOCAL(a7)
 			loop_out
+			ldc.l #0			; dummy cached value, should be removed
 		loop_out			
+		ld.l #0					; dummy value, should be removed
 	loop_out
 
 	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
@@ -270,7 +311,9 @@ unit_test_loops
 			loop_in
 				inc.l loop_res3+LOCAL(a7)
 			loop_out
+			ldc.l #0			; dummy cached value, should be removed
 		loop_out			
+		ld.l #0					; dummy value, should be removed
 	loop_out
 
 	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
@@ -285,13 +328,16 @@ unit_test_loops
 			loop_in_const PRIME_3
 				inc.l loop_res4+LOCAL(a7)
 			loop_out
+			ldc.l #0			; dummy cached value, should be removed
 		loop_out			
+		ld.l #0					; dummy value, should be removed
 	loop_out
 
 	COMPARE_RESULT.l #(PRIME_1*PRIME_2*PRIME_3)
 
 
 	ENDC	; ENABLE_TEST_LOOPS
+
 
 ;
 ;	Unit tests for if_<condition>
@@ -397,6 +443,229 @@ unit_test_if
 	IF_TEST #-10,#10,if_uhs,#UT_TRUE
 
 	ENDC	; ENABLE_TEST_IF
+
+
+;
+;	Unit tests for if_<condition>
+;
+
+	IF ENABLE_TEST_AND_IF=1
+
+unit_test_and_if
+
+	TEST_NAME 'and_if'
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_lo #-1,#0
+	and_if_hi #0,#-1
+	and_if_ne #1,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_ls #-1,#0
+	and_if_ls #0,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_hs #0,#-1
+	and_if_hs #0,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_ulo #0,#$ffff
+	and_if_uhi #$ffff,#0
+	and_if_eq #1,#1
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_uls #0,#$ffff
+	and_if_uls #$0,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_uhs #$ffff,0
+	and_if_uhs #$0,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_TRUE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_lo #-1,#0
+	and_if_hi #0,#-1
+	and_if_ne #1,#1
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_FALSE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_lo #-1,#0
+	and_if_hi #0,#0
+	and_if_ne #1,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_FALSE
+
+
+	TEST_CASE
+
+	if_eq #1,#1
+	and_if_lo #0,#0
+	and_if_hi #0,#-1
+	and_if_ne #1,#0
+		ldc #UT_TRUE
+	el_se
+		ldc #UT_FALSE
+	end_if
+
+	COMPARE_RESULT #UT_FALSE
+
+
+	ENDC	; ENABLE_TEST_AND_IF
+
+
+;
+;	Unit tests for while loops
+;
+
+	IF ENABLE_TEST_WHILE=1
+
+unit_test_while
+
+	TEST_NAME 'while'
+
+	TEST_CASE
+	ld.l #0,while_res1		; test result
+
+	move.w #$1000,d2
+
+	while_in
+		ldc d2
+		if_hi #0
+			subq.w #1,d2
+			inc.l while_res1+LOCAL(a7)
+	while_out
+
+	COMPARE_RESULT.l #$1000
+
+
+	TEST_CASE
+	ld.l #0,while_res2		; test result
+	move.w #$1000,d2
+
+	while_in
+		ldc d2
+		if_hi #0
+			subq.w #1,d2
+			inc.l while_res2+LOCAL(a7)
+			ldc.l #0		; extra cached value to the stack inside while loop,
+									; should be automatically removed
+	while_out
+
+	COMPARE_RESULT.l #$1000
+
+
+	TEST_CASE
+	ld.l #0,while_res3		; test result
+	move.w #$1000,d2
+
+	while_in
+		ldc d2
+		if_hi #0
+			subq.w #1,d2
+			inc.l while_res3+LOCAL(a7)
+			ld.l #0		; extra value to the stack inside while loop,
+								; should be automatically removed
+	while_out
+
+	COMPARE_RESULT.l #$1000
+
+
+	TEST_CASE
+	ld.l #0,while_res4		; test result
+
+	move.w #PRIME_1,d2
+
+	while_in
+		ldc d2
+		if_hi #0
+			move.w #PRIME_2,d3
+			while_in
+				ldc d3
+				if_hi #0
+					move.w #PRIME_3,d4
+					while_in
+						ldc d4
+						if_hi #0
+							subq.w #1,d4
+							inc.l while_res4+LOCAL(a7)
+						while_out
+					subq.w #1,d3
+			while_out
+			subq.w #1,d2
+	while_out
+
+	COMPARE_RESULT.l #PRIME_1*PRIME_2*PRIME_3
+
+
+	ENDC
+
 
 ;
 ;	Tests for allocation from memory pool

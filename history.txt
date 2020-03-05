@@ -1,6 +1,35 @@
+*** 05-mar-20
+
+If and while commands refactored
+
+More unit test coverage: while, and_if 
+
+
+*** 04-mar-20
+
+Branches refactored: forward offsets are written using RORG directive
+when the displacement is known at the target label 
+PROS: No more messy label generating code!
+
+Refactored unit tests for rotate commands
+
+
+*** 03-mar-20
+
+New file 'rpn68k_flags.i'
+
+Refactored more commands to use LS_FLAGS
+
+min / max / umin / umax support .l size
+
+More unit test coverage
+
+
 *** 02-mar-20
 
 div and mul support .l op size
+
+LS_FLAGS mechanism to help with macro control flow
 
 
 *** 01-mar-20
