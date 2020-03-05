@@ -63,7 +63,8 @@ LS_FLUSH macro
 	endm
 
 
-;	LS_CACHE - Cache top of stack
+;	LS_CACHE
+;	Cache top of stack
 ;
 ;	If the cache is currently empty, move the top of stack to d0
 
@@ -71,34 +72,33 @@ LS_CACHE macro
 	IF LS_CACHED=0
 		LS_FLAGS.\0 cache,\1
 
-		; If called with an argument (the name of the calling macro),
-		; use those flags to determine op size
-
-		IF LS_FLAGS_cache&LS_FLAGS_HAS_ARG
-			LS_SET LS_FLAGS_cache,LS_FLAGS_\1
-		ENDC
-
-		IF LS_FLAGS_cache&LS_FLAGS_L ; 32-bit
+		IF LSF_cache&LSF_L 	; 32-bit
 			move.l (a7)+,d0
-		ELSE												 ; 16-bit
+		ELSE								; 16-bit
 			move.w (a7)+,d0
 		ENDC
 
-		LS_SET LS_CACHED,LS_FLAGS_cache&LS_FLAGS_SIZE_MASK
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_cache&LS_FLAGS_SIZE_MASK)
+		LS_SET LS_CACHED,LSF_cache&LSF_SIZE_MASK
+		LS_SET LOCAL,LOCAL-(LSF_cache&LSF_SIZE_MASK)
 
 	ENDC
 	endm
 
-var macro
+
+; 	var
+;	Set local variable name.
+
+var macro										; todo don't flush
 	LS_FLUSH
 	LS_SET \1,(-LOCAL)
 	endm
+
 
 LS_ARGSIZE macro
 	LS_FLUSH
 	LS_SET __ARGOFF,(\1)
 	endm
+
 
 LS_ARG macro
 	IFC \0,L
@@ -123,6 +123,9 @@ alloc macro
 
 	endm
 
+
+;	Push internal control structure stack
+
 LS_PUSH_CS macro
 _f SET  _e
 _e SET _d
@@ -141,6 +144,9 @@ _2 SET _1
 _1 SET _0
 _0 SET \1
 	endm
+
+
+;	Drop internal control structure stack
 
 LS_DROP_CS macro
 _0 SET _1
@@ -239,9 +245,16 @@ _0 set LS_SWAP_TMP
 	endm
 
 
+;	push
+;	Push to stack (alias for ld)
+
 push macro
 	ld.\0 \1
 	endm
+
+
+;	pop
+;	Pop from stack (alias for sto)
 
 pop macro
 	sto.\0 \1
@@ -257,15 +270,15 @@ ld macro
 
 	LS_FLUSH	; Flush cached value if any
 
-	IF LS_FLAGS_ld&LS_FLAGS_W
+	IF LSF_ld&LSF_W
 		move.w \1,-(a7)					; 16-bit
 	ELSE
 		move.l \1,-(a7)					; 32-bit
 	ENDC
 
-	LS_SET LOCAL,LOCAL+(LS_FLAGS_ld&LS_FLAGS_SIZE_MASK)
+	LS_SET LOCAL,LOCAL+(LSF_ld&LSF_SIZE_MASK)
 
-	IF LS_FLAGS_ld&LS_FLAGS_HAS_ARG2
+	IF LSF_ld&LSF_HAS_ARG2
 		var \2
 	ENDC
 
@@ -281,20 +294,20 @@ ldc macro
 
 	LS_FLUSH
 
-	IF LS_FLAGS_ldc&LS_FLAGS_W
+	IF LSF_ldc&LSF_W
 		move.w \1,d0							; 16-bit
 	ELSE
-	IF LS_FLAGS_ldc&LS_FLAGS_L
+	IF LSF_ldc&LSF_L
 		move.l \1,d0							; 32-bit
 	ELSE
 		move.b \1,d0							; 8-bit
 		ext.w d0
 		; Force cache size to 2
-		LS_FLAGS_B2W ldc
+		LSF_B2W ldc
 	ENDC
 	ENDC
 
-	LS_SET LS_CACHED,LS_FLAGS_ldc&LS_FLAGS_SIZE_MASK
+	LS_SET LS_CACHED,LSF_ldc&LSF_SIZE_MASK
 	endm
 
 
@@ -313,7 +326,7 @@ sto macro
 	LS_FLAGS.\0 sto,\1,\2
 
 	IF LS_CACHED=2
-		IF LS_FLAGS_sto&LS_FLAGS_W
+		IF LSF_sto&LSF_W
 			move.w d0,\1
 		ELSE
 			move.b d0,\1
@@ -322,11 +335,11 @@ sto macro
 	IF LS_CACHED=4
 		move.l d0,\1
 	ELSE
-		IF LS_FLAGS_sto&LS_FLAGS_W
+		IF LSF_sto&LSF_W
 			LS_SET LOCAL,LOCAL-2
 			move.w (a7)+,\1						; 16-bit
 		ELSE
-		IF LS_FLAGS_sto&LS_FLAGS_L
+		IF LSF_sto&LSF_L
 			LS_SET LOCAL,LOCAL-4
 			move.l (a7)+,\1						; 32-bit
 		ELSE
@@ -353,8 +366,8 @@ drop macro
 	IF LS_CACHED>0
 		LS_SET LS_CACHED,0
 	ELSE
-		addq #LS_FLAGS_drop&LS_FLAGS_SIZE_MASK,a7
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_drop&LS_FLAGS_SIZE_MASK)
+		addq #LSF_drop&LSF_SIZE_MASK,a7
+		LS_SET LOCAL,LOCAL-(LSF_drop&LSF_SIZE_MASK)
 	ENDC
 	endm
 
@@ -375,12 +388,12 @@ dup macro
 	LS_FLAGS.\0 dup
 
 	IF LS_CACHED=0
-		IF LS_FLAGS_dup&LS_FLAGS_W
+		IF LSF_dup&LSF_W
 			move.w (a7),d0
 		ELSE
 			move.l (a7),d0
 		ENDC
-		LS_SET LS_CACHED,LS_FLAGS_dup&LS_FLAGS_SIZE_MASK
+		LS_SET LS_CACHED,LSF_dup&LSF_SIZE_MASK
 	ELSE
 		IF LS_CACHED=4
 			move.l d0,-(a7)
@@ -401,10 +414,10 @@ dup macro
 restore macro
 	LS_FLAGS.\0 restore,\1,\2
 
-	LS_SET LS_CACHED,LS_FLAGS_restore&LS_FLAGS_SIZE_MASK
+	LS_SET LS_CACHED,LSF_restore&LSF_SIZE_MASK
 
-	IF LS_FLAGS_restore&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_restore&LS_FLAGS_W
+	IF LSF_restore&LSF_HAS_ARG
+		IF LSF_restore&LSF_W
 			sto \1
 		ELSE
 			sto.l \1

@@ -219,7 +219,70 @@ ARITHMETIC_TEST_LLL macro
 	\3.l \2
 	COMPARE_RESULT.l \4
 	endm
-	
+
+
+
+
+ARITHMETIC_TEST_WW macro
+
+	TEST_CASE						; value in stack
+	ld \1
+	\2
+	COMPARE_RESULT \3
+
+	TEST_CASE						; value in cache
+	ldc \1
+	\2
+	COMPARE_RESULT \3
+
+	TEST_CASE						; with argument
+	\2 \1
+	COMPARE_RESULT \3
+	endm
+
+
+ARITHMETIC_TEST_LL macro
+
+	TEST_CASE						; value in stack (int32)
+	ld.l \1
+	\2.l
+	COMPARE_RESULT.l \3
+
+	TEST_CASE						; value in cache (int32)
+	ldc.l \1
+	\2.l
+	COMPARE_RESULT.l \3
+
+	TEST_CASE						; with argument (int32)
+	\2.l \1
+	COMPARE_RESULT.l \3
+
+	endm
+
+
+ARITHMETIC_TEST_WL macro
+
+	TEST_CASE						; value in stack
+	ld \1
+	\2.l
+	COMPARE_RESULT.l \3
+
+	TEST_CASE						; value in cache
+	ldc \1
+	\2.l
+	COMPARE_RESULT.l \3
+
+	TEST_CASE						; with argument
+	\2.l \1
+	COMPARE_RESULT.l \3
+	endm
+
+
+ARITHMETIC_TEST_SINGLE macro
+	ARITHMETIC_TEST_WW \1,\2,\3
+	ARITHMETIC_TEST_LL \1,\2,\3
+	endm
+
 
 ARITHMETIC_TEST macro
 	ARITHMETIC_TEST_WWW \1,\2,\3,\4

@@ -4,6 +4,8 @@ If and while commands refactored
 
 More unit test coverage: while, and_if 
 
+Preprocessor variable names LS_FLAGS_xx shortened to LSF_
+
 
 *** 04-mar-20
 

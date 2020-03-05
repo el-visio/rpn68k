@@ -21,14 +21,14 @@ if_not macro
 if_null macro
 	LS_FLAGS.\0 if_null,\1,\2
 
-	IF LS_FLAGS_if_null&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_if_null&LS_FLAGS_W
+	IF LSF_if_null&LSF_HAS_ARG
+		IF LSF_if_null&LSF_W
 			ldc \1
 		ELSE
 			ldc.l \1
 		ENDC
 	ELSE
-		IF LS_FLAGS_if_null&LS_FLAGS_W
+		IF LSF_if_null&LSF_W
 			LS_CACHE
 			tst d0
 		ELSE
@@ -46,14 +46,14 @@ if_null macro
 if_not_null macro
 	LS_FLAGS.\0 if_null,\1,\2
 
-	IF LS_FLAGS_if_null&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_if_null&LS_FLAGS_W
+	IF LSF_if_null&LSF_HAS_ARG
+		IF LSF_if_null&LSF_W
 			ldc \1
 		ELSE
 			ldc.l \1
 		ENDC
 	ELSE
-		IF LS_FLAGS_if_null&LS_FLAGS_W
+		IF LSF_if_null&LSF_W
 			LS_CACHE
 			tst d0
 		ELSE
@@ -71,8 +71,8 @@ if_not_null macro
 LS_IF_BASE macro
 	LS_FLAGS.\0 if_base,\3,\4
 
-	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG2
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+	IF LSF_if_base&LSF_HAS_ARG2
+		IF LSF_if_base&LSF_W
 			ldc \3
 			cmp \4,d0
 		ELSE
@@ -81,8 +81,8 @@ LS_IF_BASE macro
 		ENDC
 		LS_JUMP_FWD \1
 	ELSE
-	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+	IF LSF_if_base&LSF_HAS_ARG
+		IF LSF_if_base&LSF_W
 			LS_CACHE
 			cmp \3,d0
 		ELSE
@@ -91,13 +91,14 @@ LS_IF_BASE macro
 		ENDC
 		LS_JUMP_FWD \1
 	ELSE 
-		LS_CACHE if_base
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+		IF LSF_if_base&LSF_W
+			LS_CACHE
 			cmp (a7)+,d0
 		ELSE
+			LS_CACHE.l
 			cmp.l (a7)+,d0
 		ENDC
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_if_base&LS_FLAGS_SIZE_MASK)
+		LS_SET LOCAL,LOCAL-(LSF_if_base&LSF_SIZE_MASK)
 		LS_JUMP_FWD \2
 	ENDC
 	ENDC
@@ -110,8 +111,8 @@ LS_IF_BASE macro
 LS_AND_IF_BASE macro
 	LS_FLAGS.\0 if_base,\3,\4
 
-	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG2
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+	IF LSF_if_base&LSF_HAS_ARG2
+		IF LSF_if_base&LSF_W
 			ldc \3
 			cmp \4,d0
 		ELSE
@@ -120,8 +121,8 @@ LS_AND_IF_BASE macro
 		ENDC
 		LS_JUMP_FWD_AND \1
 	ELSE
-	IF LS_FLAGS_if_base&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+	IF LSF_if_base&LSF_HAS_ARG
+		IF LSF_if_base&LSF_W
 			LS_CACHE
 			cmp \3,d0
 		ELSE
@@ -130,14 +131,14 @@ LS_AND_IF_BASE macro
 		ENDC
 		LS_JUMP_FWD_AND \1
 	ELSE 
-		IF LS_FLAGS_if_base&LS_FLAGS_W
+		IF LSF_if_base&LSF_W
 			LS_CACHE
 			cmp (a7)+,d0
 		ELSE
 			LS_CACHE.l
 			cmp.l (a7)+,d0
 		ENDC
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_if_base&LS_FLAGS_SIZE_MASK)
+		LS_SET LOCAL,LOCAL-(LSF_if_base&LSF_SIZE_MASK)
 		LS_JUMP_FWD_AND \2
 	ENDC
 	ENDC

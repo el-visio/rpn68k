@@ -3,25 +3,27 @@
 LS_ARITHMETIC_BASE macro
 	LS_FLAGS.\0 ab,\2,\3
 
-	IF LS_FLAGS_ab&LS_FLAGS_HAS_ARG 	; Called with argument
-		LS_CACHE ab
-		IF LS_FLAGS_ab&LS_FLAGS_W
+	IF LSF_ab&LSF_HAS_ARG 	; Called with argument
+		IF LSF_ab&LSF_W
+			LS_CACHE
 			\1 \2,d0								; Apply operation to cached TOS (16-bit)
 		ELSE
+			LS_CACHE.l
 			\1.l \2,d0							; Apply operation to cached TOS (32-bit)
 		ENDC
 
 	ELSE												; No argument
-		LS_CACHE ab
-		IF LS_FLAGS_ab&LS_FLAGS_W
+		IF LSF_ab&LSF_W
+			LS_CACHE
 			\1.w (a7)+,d0						; Apply operation for two topmost
 															; values in stack (16-bit)
 
 		ELSE
+			LS_CACHE.l
 			\1.l (a7)+,d0						; Apply operation for two topmost
 															; values in stack (32-bit)
 		ENDC
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_ab&LS_FLAGS_SIZE_MASK)
+		LS_SET LOCAL,LOCAL-(LSF_ab&LSF_SIZE_MASK)
 	ENDC
 	endm
 
@@ -29,19 +31,21 @@ LS_ARITHMETIC_BASE macro
 LS_ARITHMETIC_BASE_2 macro
 	LS_FLAGS.\0 ab2,\2,\3
 
-	IF LS_FLAGS_ab2&LS_FLAGS_HAS_ARG
-		LS_CACHE ab2
-		IF LS_FLAGS_ab2&LS_FLAGS_W
+	IF LSF_ab2&LSF_HAS_ARG
+		IF LSF_ab2&LSF_W
+			LS_CACHE
 			\1.w \2,d0
 		ELSE
+			LS_CACHE.l
 			\1.l \2,d0
 		ENDC
 	ELSE
-		LS_CACHE ab2
-		IF LS_FLAGS_ab2&LS_FLAGS_W
+		IF LSF_ab2&LSF_W
+			LS_CACHE
 			\1.w d0,(a7)
 			drop
 		ELSE
+			LS_CACHE.l
 			\1.l d0,(a7)
 			drop
 		ENDC
@@ -52,8 +56,8 @@ LS_ARITHMETIC_BASE_2 macro
 LS_ARITHMETIC_BASE_3 macro
 	LS_FLAGS.\0 ab3,\2,\3
 
-	IF LS_FLAGS_ab3&LS_FLAGS_W
-		IF LS_FLAGS_ab3&LS_FLAGS_HAS_ARG
+	IF LSF_ab3&LSF_W
+		IF LSF_ab3&LSF_HAS_ARG
 			ldc \2
 		ELSE
 			LS_CACHE
@@ -61,7 +65,7 @@ LS_ARITHMETIC_BASE_3 macro
 
 		\1 d0,(a7)
 	ELSE
-		IF LS_FLAGS_ab3&LS_FLAGS_HAS_ARG
+		IF LSF_ab3&LSF_HAS_ARG
 			ldc.l \2
 		ELSE
 			LS_CACHE.l
@@ -77,11 +81,12 @@ LS_ARITHMETIC_BASE_3 macro
 LS_ROT_BASE macro
 	LS_FLAGS.\0 rotb,\2,\3
 
-	IF LS_FLAGS_rotb&LS_FLAGS_HAS_ARG
-		LS_CACHE rotb
-		IF LS_FLAGS_rotb&LS_FLAGS_W
+	IF LSF_rotb&LSF_HAS_ARG
+		IF LSF_rotb&LSF_W
+			LS_CACHE
 			\1 \2,d0
 		ELSE
+			LS_CACHE.l
 			\1.l \2,d0
 		ENDC
 	ELSE
@@ -93,12 +98,34 @@ LS_ROT_BASE macro
 			drop
 		ENDC
 
-		LS_CACHE rotb
-		IF LS_FLAGS_rotb&LS_FLAGS_W
+		IF LSF_rotb&LSF_W
+			LS_CACHE
 			\1 d1,d0
 		ELSE
+			LS_CACHE.l
 			\1.l d1,d0
 		ENDC
+	ENDC
+	endm
+
+
+LS_ARITHMETIC_S_BASE macro
+	LS_FLAGS.\0 asingle,\2,\3
+
+	IF LSF_asingle&LSF_W
+		IF LSF_asingle&LSF_HAS_ARG
+			ldc \2
+		ELSE
+			LS_CACHE
+		ENDC
+		\1.w d0
+	ELSE
+		IF LSF_asingle&LSF_HAS_ARG
+			ldc.l \2
+		ELSE
+			LS_CACHE.l
+		ENDC
+		\1.l d0
 	ENDC
 	endm
 
@@ -111,10 +138,12 @@ LS_ROT_BASE macro
 div macro
 	LS_FLAGS.\0 div,\1,\2
 
-	IF LS_FLAGS_div&LS_FLAGS_HAS_ARG
-		LS_CACHE div
-		IF LS_FLAGS_div&LS_FLAGS_W
+	IF LSF_div&LSF_HAS_ARG
+		IF LSF_div&LSF_W
+			LS_CACHE.w
 			ext.l d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 		divs \1,d0
 	ELSE
@@ -126,10 +155,12 @@ div macro
 			drop
 		ENDC
 
-		LS_CACHE div
 
-		IF LS_FLAGS_div&LS_FLAGS_W
+		IF LSF_div&LSF_W
+			LS_CACHE
 			ext.l d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 
 		divs d1,d0
@@ -150,10 +181,12 @@ div macro
 udiv macro
 	LS_FLAGS.\0 udiv,\1,\2
 
-	IF LS_FLAGS_udiv&LS_FLAGS_HAS_ARG
-		LS_CACHE udiv
-		IF LS_FLAGS_udiv&LS_FLAGS_W
+	IF LSF_udiv&LSF_HAS_ARG
+		IF LSF_udiv&LSF_W
+			LS_CACHE
 			and.l #$ffff,d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 		divu \1,d0
 	ELSE
@@ -165,10 +198,11 @@ udiv macro
 			drop
 		ENDC
 
-		LS_CACHE udiv
-
-		IF LS_FLAGS_udiv&LS_FLAGS_W
+		IF LSF_udiv&LSF_W
+			LS_CACHE
 			and.l #$ffff,d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 
 		divu d1,d0
@@ -188,10 +222,12 @@ udiv macro
 div12f macro
 	LS_FLAGS.\0 div,\1,\2
 
-	IF LS_FLAGS_div&LS_FLAGS_HAS_ARG
-		LS_CACHE div
-		IF LS_FLAGS_div&LS_FLAGS_W
+	IF LSF_div&LSF_HAS_ARG
+		IF LSF_div&LSF_W
+			LS_CACHE
 			ext.l d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 
 		asl.l #6,d0
@@ -206,10 +242,11 @@ div12f macro
 			drop
 		ENDC
 
-		LS_CACHE div
-
-		IF LS_FLAGS_div&LS_FLAGS_W
+		IF LSF_div&LSF_W
+			LS_CACHE
 			ext.l d0
+		ELSE
+			LS_CACHE.l
 		ENDC
 
 		asl.l #6,d0
@@ -231,7 +268,7 @@ div12f macro
 mod macro
 	LS_FLAGS.\0 mod,\1,\2
 
-	IF LS_FLAGS_mod&LS_FLAGS_W
+	IF LSF_mod&LSF_W
 		div \1,\2
 	ELSE
 		div.l \1,\2
@@ -249,13 +286,13 @@ add_to macro
 	LS_FLAGS.\0 add_to,\1,\2
 
 	IF LS_CACHED=0
-		IF LS_FLAGS_add_to&LS_FLAGS_W
+		IF LSF_add_to&LSF_W
 			add.w (a7)+,\1
 		ELSE
 			add.l (a7)+,\1
 		ENDC
 
-		LS_SET LOCAL,LOCAL-(LS_FLAGS_add_to&LS_FLAGS_SIZE_MASK)
+		LS_SET LOCAL,LOCAL-(LSF_add_to&LSF_SIZE_MASK)
 	ELSE
 		IF LS_CACHED=4
 			add.l d0,\1
@@ -302,14 +339,14 @@ mul macro
 	LS_FLAGS.\0 mul,\1,\2
 
 	LS_CACHE
-	IF LS_FLAGS_mul&LS_FLAGS_HAS_ARG
+	IF LSF_mul&LSF_HAS_ARG
 		muls \1,d0
 	ELSE
 		muls (a7)+,d0
 		LS_SET LOCAL,LOCAL-2
 	ENDC
 
-	IF LS_FLAGS_mul&LS_FLAGS_L
+	IF LSF_mul&LSF_L
 		LS_SET LS_CACHED,4 	; return value for mul.l is int32
 	ENDC
 	endm
@@ -329,7 +366,7 @@ mul12f macro
 	asr.l #6,d0
 	asr.l #6,d0
 
-	IF LS_FLAGS_mul12f&LS_FLAGS_W
+	IF LSF_mul12f&LSF_W
 		restore					; cache is now 16-bit
 	ENDC
 
@@ -341,15 +378,25 @@ mul12f macro
 ;	Multiply 12-bit fixed point value by itself
 
 square12f macro
-	IFNB \1
+	LS_FLAGS square12f,\1,\2
+
+	IF LSF_square12f&LSF_HAS_ARG
 		ldc \1
 	ELSE
 		LS_CACHE
 	ENDC
 
-	muls d0,d0
-	asr_.l #6
-	asr_.l #6
+	IF LSF_square12f&LSF_W
+		muls d0,d0
+		asr.l #6,d0
+		asr.l #6,d0
+	ELSE
+		muls d0,d0
+		asr.l #6,d0
+		asr.l #6,d0
+		restore.l
+	ENDC
+
 	endm
 
 
@@ -369,12 +416,22 @@ xor_ macro
 
 
 asl_ macro
-	LS_ROT_BASE.\0 asl,\1
+	LS_ROT_BASE.\0 asl,\1,\2
 	endm
 
 
 asr_ macro
 	LS_ROT_BASE.\0 asr,\1,\2
+	endm
+
+
+lsl_ macro
+	LS_ROT_BASE.\0 lsl,\1,\2
+	endm
+
+
+lsr_ macro
+	LS_ROT_BASE.\0 lsr,\1,\2
 	endm
 
 
@@ -393,42 +450,76 @@ ror_ macro
 ;	Negate top of stack.
 
 neg_ macro
-	LS_FLAGS.\0 neg_,\1,\2
-	IF LS_FLAGS_neg_&LS_FLAGS_W
-		LS_CACHE
+	LS_ARITHMETIC_S_BASE.\0 neg,\1,\2
+	endm
+
+
+;	not
+;
+;	Logical not top of stack.
+
+not_ macro
+	LS_ARITHMETIC_S_BASE.\0 not,\1,\2
+	endm
+
+
+abs macro
+	LS_FLAGS.\0 abs,\1,\2
+
+	IF LSF_abs&LSF_W
+		IF LSF_abs&LSF_HAS_ARG
+			ldc \1
+		ELSE
+			LS_CACHE
+		ENDC
+		tst.w d0
+	ELSE
+		IF LSF_abs&LSF_HAS_ARG
+			ldc.l \1
+		ELSE
+			LS_CACHE.l
+		ENDC
+		tst.l d0
+	ENDC
+
+	bpl.b *+4
+
+	IF LSF_abs&LSF_W
 		neg.w d0
 	ELSE
-		LS_CACHE.l
 		neg.l d0
 	ENDC
+
 	endm
+
+
 
 
 LS_MINMAX_HEADER macro
 	LS_FLAGS.\0 minmax,\1,\2
 
-	IF LS_FLAGS_minmax&LS_FLAGS_HAS_ARG
-		IF LS_FLAGS_minmax&LS_FLAGS_W
+	IF LSF_minmax&LSF_HAS_ARG
+		IF LSF_minmax&LSF_W
 			ldc \1
 		ELSE
 			ldc.l \1
 		ENDC
-	ELSE
-		LS_CACHE minmax
 	ENDC
 
-	IF LS_FLAGS_minmax&LS_FLAGS_W
+	IF LSF_minmax&LSF_W
+		LS_CACHE
 		cmp.w (a7),d0
 	ELSE
+		LS_CACHE.l
 		cmp.l (a7),d0
 	ENDC
 
-	LS_SET LOCAL,LOCAL-(LS_FLAGS_minmax&LS_FLAGS_SIZE_MASK)
+	LS_SET LOCAL,LOCAL-(LSF_minmax&LSF_SIZE_MASK)
 	endm
 
 
 LS_MINMAX_DROP_TOP macro
-	IF LS_FLAGS_minmax&LS_FLAGS_W
+	IF LSF_minmax&LSF_W
 		move.w (a7)+,d0
 	ELSE
 		move.l (a7)+,d0
@@ -437,7 +528,7 @@ LS_MINMAX_DROP_TOP macro
 
 
 LS_MINMAX_DROP_2ND macro
-	addq #LS_FLAGS_minmax&LS_FLAGS_SIZE_MASK,a7
+	addq #LSF_minmax&LSF_SIZE_MASK,a7
 	endm
 
 
