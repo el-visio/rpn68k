@@ -1,3 +1,12 @@
+*** 14-mar-20
+
+New command: alloc_64k allocates memory making sure it's inside 64k boundary
+
+New command: sto_add (store additive)
+
+New command: sto_sub (store substractive)
+
+
 *** 05-mar-20
 
 If and while commands refactored

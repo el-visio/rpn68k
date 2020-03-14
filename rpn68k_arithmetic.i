@@ -282,27 +282,6 @@ mod macro
 ;
 ;	Add top of stack to address given in argument
 
-add_to macro 
-	LS_FLAGS.\0 add_to,\1,\2
-
-	IF LS_CACHED=0
-		IF LSF_add_to&LSF_W
-			add.w (a7)+,\1
-		ELSE
-			add.l (a7)+,\1
-		ENDC
-
-		LS_SET LOCAL,LOCAL-(LSF_add_to&LSF_SIZE_MASK)
-	ELSE
-		IF LS_CACHED=4
-			add.l d0,\1
-		ELSE
-			add.w d0,\1
-		ENDC
-		drop
-	ENDC
-	endm
-
 add_ macro
 	LS_ARITHMETIC_BASE.\0 add,\1,\2
 	endm

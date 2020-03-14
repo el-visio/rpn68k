@@ -12,6 +12,7 @@ UT_FALSE equ $00
 
 	rsreset
 UT_mempool      rs.l 1	; Memory pool
+UT_fakemem			rs.l 1	; Fake memory pool for 64k test
 UT_p10          rs.w 1	; variables for arithmetic tests
 UT_p20          rs.w 1	; ...
 UT_p30          rs.w 1	; 

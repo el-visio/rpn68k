@@ -24,7 +24,7 @@
 ENABLE_TEST_ARITHMETIC	equ 1	; Enable tests for arithmetic commands
 ENABLE_TEST_LOOPS				equ 1	; Enable tests for loops
 ENABLE_TEST_IF					equ 1	; Enable tests for if commands
-ENABLE_TEST_AND_IF			equ 1	; Enable tests for and if commands
+ENABLE_TEST_AND_IF			equ 1 ; Enable tests for and if commands
 ENABLE_TEST_WHILE				equ 1	; Enable tests for while commands
 ENABLE_TEST_ALLOC				equ 1	; Enable tests for memory allocation
 ENABLE_TEST_LIST				equ 1	; Enable tests for list insertion
@@ -731,6 +731,8 @@ unit_test_while
 
 unit_test_alloc
 
+	; Standard allocation from mempool
+
 	TEST_CASE
 	alloc UT_mempool(a6),#1000
 	sub_.l UT_mempool(a6)
@@ -740,6 +742,76 @@ unit_test_alloc
 	alloc UT_mempool(a6),#2000
 	sub_.l UT_mempool(a6)
 	COMPARE_RESULT.l #-2000
+
+
+	; Allocation inside 64k boundary
+
+	move.l #$2f000,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$1000
+	COMPARE_RESULT.l #$2f000
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$30000
+
+
+	move.l #$2f000,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$1002
+	COMPARE_RESULT.l #$30000
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$31002
+
+
+	move.l #$21000,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$f000
+	COMPARE_RESULT.l #$21000
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$30000
+
+
+	move.l #$21000,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$f002
+	COMPARE_RESULT.l #$30000
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$3f002
+
+
+	move.l #$2f000,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$0800
+	COMPARE_RESULT.l #$2f000
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$2f800
+
+
+	move.l #$20800,UT_fakemem(a6)
+
+	TEST_CASE
+	alloc_64k UT_fakemem(a6),#$f000
+	COMPARE_RESULT.l #$20800
+
+	TEST_CASE
+	ldc.l UT_fakemem(a6)
+	COMPARE_RESULT.l #$2f800
+
+
 
 	ENDC ; ENABLE_TEST_ALLOC
 

@@ -124,6 +124,27 @@ alloc macro
 	endm
 
 
+alloc_64k macro
+	IFNB \2
+		ldc.l \2
+	ENDC
+
+	LS_CACHE.l
+	
+	dup.l
+	restore
+	neg_
+
+	if_ulo 2+\1
+		add.w #$1,\1
+		move.w #0,2+\1
+	end_if
+
+	alloc \1
+
+	endm
+
+
 ;	Push internal control structure stack
 
 LS_PUSH_CS macro
@@ -355,6 +376,54 @@ sto macro
 	endm
 
 
+;	Store additive
+
+sto_add macro 
+	LS_FLAGS.\0 add_to,\1,\2
+
+	IF LS_CACHED=0
+		IF LSF_add_to&LSF_W
+			add.w (a7)+,\1
+		ELSE
+			add.l (a7)+,\1
+		ENDC
+
+		LS_SET LOCAL,LOCAL-(LSF_add_to&LSF_SIZE_MASK)
+	ELSE
+		IF LS_CACHED=4
+			add.l d0,\1
+		ELSE
+			add.w d0,\1
+		ENDC
+		drop
+	ENDC
+	endm
+
+
+;	Store substractive
+
+sto_sub macro 
+	LS_FLAGS.\0 add_to,\1,\2
+
+	IF LS_CACHED=0
+		IF LSF_add_to&LSF_W
+			sub.w (a7)+,\1
+		ELSE
+			sub.l (a7)+,\1
+		ENDC
+
+		LS_SET LOCAL,LOCAL-(LSF_add_to&LSF_SIZE_MASK)
+	ELSE
+		IF LS_CACHED=4
+			sub.l d0,\1
+		ELSE
+			sub.w d0,\1
+		ENDC
+		drop
+	ENDC
+	endm
+
+
 ;	drop 
 ;
 ;	Drop top of stack
@@ -427,25 +496,15 @@ restore macro
 	endm
 
 
-LS_ARRAY_LEN macro
+;	LS_ARRAY_LEN
+;
 ;	Helper macro to calculate array length
 ;
 ;	\1 label for length
 ;	\2 start offset
 ;	\3 element size
 ;
+
+LS_ARRAY_LEN macro
 \1 equ (*-\2)/(\3)
-	endm
-
-
-;	Get pointer to string
-
-string macro
-	ld_addr .string\@(pc)
-	bra .next\@
-.string\@
-	dc.b \1
-	dc.b 0
-	EVEN
-.next\@
 	endm
